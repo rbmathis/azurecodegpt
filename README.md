@@ -43,18 +43,18 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 To use this extension, install it from the VSCode marketplace.
 
 1. After the installation is complete, you will need to add your Azure OpenAI API key, endpoint and deployment name to the extension settings in VSCode. To do this, open the `Settings` panel by going to the `File` menu and selecting `Preferences`, then `Settings`.
-2. In the search bar, type `CodeGPT` to filter the settings list.
-3. In the CodeGPT section, enter your API key, endpoint and deployment name. You can find these in your Azure OpenAI account.
+2. In the search bar, type `AzureCodeGPT` to filter the settings list.
+3. In the AzureCodeGPT section, enter your API key, endpoint and deployment name. You can find these in your Azure OpenAI account.
 
 After completing these steps, the extension should be ready to use.
 
 ## Using the Extension
 
-To use the extension, open a text editor in Visual Studio Code and open the CodeGPT panel by clicking on the CodeGPT icon in the sidebar. This will open a panel with an input field where you can enter your prompt or question. By clicking enter, it will be sent to GPT3. Its response will be displayed below the input field in the sidebar (note that it may take some time for it to be calculated).
+To use the extension, open a text editor in Visual Studio Code and open the AzureCodeGPT panel by clicking on the AzureCodeGPT icon in the sidebar. This will open a panel with an input field where you can enter your prompt or question. By clicking enter, it will be sent to GPT3. Its response will be displayed below the input field in the sidebar (note that it may take some time for it to be calculated).
 
 <img src="examples/create.png" alt="Writing new code using chatGPT" width="500"/>
 
-You can also select a code snippet in the editor and then enter a prompt in the side panel, or right-click and select "Ask CodeGPT". The **selected code will be automatically appended** to your query when it is sent to the AI. This can be useful for generating code snippets or getting explanations for specific pieces of code.
+You can also select a code snippet in the editor and then enter a prompt in the side panel, or right-click and select "Ask AzureCodeGPT". The **selected code will be automatically appended** to your query when it is sent to the AI. This can be useful for generating code snippets or getting explanations for specific pieces of code.
 
 <img src="examples/explain.png" alt="Refactoring selected code using chatGPT"/>
 
@@ -64,11 +64,11 @@ To **insert a code snippet** from the AI's response into the editor, simply clic
 
 You can select some code in the editor, right click on it and choose one of the following **shortcuts** from the context menu:
 #### Commands:
-- `Ask CodeGPT`: will provide a prompt for you to enter any query
-- `CodeGPT: Explain selection`: will explain what the selected code does
-- `CodeGPT: Refactor selection`: will try to refactor the selected code
-- `CodeGPT: Find problems`: looks for problems/errors in the selected code, fixes and explains them
-- `CodeGPT: Optimize selection`: tries to optimize the selected code
+- `Ask AzureCodeGPT`: will provide a prompt for you to enter any query
+- `AzureCodeGPT: Explain selection`: will explain what the selected code does
+- `AzureCodeGPT: Refactor selection`: will try to refactor the selected code
+- `AzureCodeGPT: Find problems`: looks for problems/errors in the selected code, fixes and explains them
+- `AzureCodeGPT: Optimize selection`: tries to optimize the selected code
 
-`Ask CodeGPT` is also available when nothing is selected. For the other four commands, you can **customize the exact prompt** that will be sent to the AI by editing the extension settings in VSCode Preferences.
+`Ask AzureCodeGPT` is also available when nothing is selected. For the other four commands, you can **customize the exact prompt** that will be sent to the AI by editing the extension settings in VSCode Preferences.
 

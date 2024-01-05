@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
     const provider = new CodeGPTViewProvider(context.extensionUri);
 
     // Get the API session token from the extension's configuration
-    const config = vscode.workspace.getConfiguration("codegpt");
+    const config = vscode.workspace.getConfiguration("azurecodegpt");
     // Put configuration settings into the provider
     provider.setAuthenticationInfo({
         apiKey: config.get("apiKey"),
@@ -49,31 +49,31 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     const commandHandler = (command: string) => {
-        const config = vscode.workspace.getConfiguration("codegpt");
+        const config = vscode.workspace.getConfiguration("azurecodegpt");
         const prompt = config.get(command) as string;
         provider.search(prompt);
     };
 
     // Register the commands that can be called from the extension's package.json
     context.subscriptions.push(
-        vscode.commands.registerCommand("codegpt.ask", () =>
+        vscode.commands.registerCommand("azurecodegpt.ask", () =>
             vscode.window
                 .showInputBox({ prompt: "What do you want to do?" })
                 .then((value) => provider.search(value))
         ),
-        vscode.commands.registerCommand("codegpt.explain", () =>
+        vscode.commands.registerCommand("azurecodegpt.explain", () =>
             commandHandler("promptPrefix.explain")
         ),
-        vscode.commands.registerCommand("codegpt.refactor", () =>
+        vscode.commands.registerCommand("azurecodegpt.refactor", () =>
             commandHandler("promptPrefix.refactor")
         ),
-        vscode.commands.registerCommand("codegpt.optimize", () =>
+        vscode.commands.registerCommand("azurecodegpt.optimize", () =>
             commandHandler("promptPrefix.optimize")
         ),
-        vscode.commands.registerCommand("codegpt.findProblems", () =>
+        vscode.commands.registerCommand("azurecodegpt.findProblems", () =>
             commandHandler("promptPrefix.findProblems")
         ),
-        vscode.commands.registerCommand("codegpt.documentation", () =>
+        vscode.commands.registerCommand("azurecodegpt.documentation", () =>
             commandHandler("promptPrefix.documentation")
         )
     );
@@ -82,48 +82,48 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(
         (event: vscode.ConfigurationChangeEvent) => {
             let shouldRefreshAPI = false;
-            if (event.affectsConfiguration("codegpt.apiKey")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            if (event.affectsConfiguration("azurecodegpt.apiKey")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setAuthenticationInfo({
                     apiKey: config.get("apiKey"),
                 });
                 shouldRefreshAPI = true;
             } else if (
-                event.affectsConfiguration("codegpt.selectedInsideCodeblock")
+                event.affectsConfiguration("azurecodegpt.selectedInsideCodeblock")
             ) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setSettings({
                     selectedInsideCodeblock:
                         config.get("selectedInsideCodeblock") || false,
                 });
-            } else if (event.affectsConfiguration("codegpt.pasteOnClick")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.pasteOnClick")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setSettings({
                     pasteOnClick: config.get("pasteOnClick") || false,
                 });
-            } else if (event.affectsConfiguration("codegpt.maxTokens")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.maxTokens")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setSettings({
                     maxTokens: config.get("maxTokens") || 500,
                 });
-            } else if (event.affectsConfiguration("codegpt.temperature")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.temperature")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setSettings({
                     temperature: config.get("temperature") || 0.5,
                 });
-            } else if (event.affectsConfiguration("codegpt.model")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.model")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setSettings({
                     model: config.get("model") || "text-davinci-003",
                 });
-            } else if (event.affectsConfiguration("codegpt.endpoint")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.endpoint")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setAuthenticationInfo({
                     endpoint: config.get("endpoint"),
                 });
                 shouldRefreshAPI = true;
-            } else if (event.affectsConfiguration("codegpt.deploymentName")) {
-                const config = vscode.workspace.getConfiguration("codegpt");
+            } else if (event.affectsConfiguration("azurecodegpt.deploymentName")) {
+                const config = vscode.workspace.getConfiguration("azurecodegpt");
                 provider.setAuthenticationInfo({
                     deploymentName: config.get("deploymentName"),
                 });
@@ -137,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class CodeGPTViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = "codegpt.chatView";
+    public static readonly viewType = "azurecodegpt.chatView";
     private _view?: vscode.WebviewView;
 
     private _openai?: OpenAIClient;
@@ -177,7 +177,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
         return this._settings;
     }
     private async _newAPI() {
-        const config = vscode.workspace.getConfiguration("codegpt");
+        const config = vscode.workspace.getConfiguration("azurecodegpt");
         this._apiKey = config.get("apiKey");
         this._endpoint = config.get("endpoint");
         this._deploymentName = config.get("deploymentName");
@@ -281,7 +281,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
         // focus gpt activity from activity bar
         if (!this._view) {
-            await vscode.commands.executeCommand("codegpt.chatView.focus");
+            await vscode.commands.executeCommand("azurecodegpt.chatView.focus");
         } else {
             this._view?.show?.(true);
         }
