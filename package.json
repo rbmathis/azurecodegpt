@@ -1,261 +1,260 @@
 {
-  "name": "codegpt3",
-  "displayName": "CodeGPT: write and improve code using AI",
-  "description": "Use GPT3 or ChatGPT right inside the IDE to enhance and automate your coding with AI-powered assistance",
-  "version": "1.1.2",
-  "publisher": "timkmecl",
-  "icon": "resources/extensionIcon.png",
-  "license": "MIT",
-  "repository": {
-    "url": "https://github.com/timkmecl/codegpt"
-  },
-  "engines": {
-    "vscode": "^1.73.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "keywords": [
-    "chatgpt",
-    "openai",
-    "gpt3",
-    "copilot",
-    "ai",
-    "explain",
-    "find bugs",
-    "explain ",
-    "refactor"
-  ],
-  "activationEvents": [
-    "onView:codegpt.chatView",
-    "onCommand:codegpt.ask",
-    "onCommand:codegpt.explain",
-    "onCommand:codegpt.refactor",
-    "onCommand:codegpt.optimize",
-    "onCommand:codegpt.findProblems",
-    "onCommand:codegpt.documentation"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "codegpt.ask",
-        "title": "Ask CodeGPT"
-      },
-      {
-        "command": "codegpt.explain",
-        "title": "CodeGPT: Explain selection"
-      },
-      {
-        "command": "codegpt.refactor",
-        "title": "CodeGPT: Refactor selection"
-      },
-      {
-        "command": "codegpt.findProblems",
-        "title": "CodeGPT: Find problems"
-      },
-      {
-        "command": "codegpt.optimize",
-        "title": "CodeGPT: Optimize selection"
-      },
-      {
-        "command": "codegpt.documentation",
-        "title": "CodeGPT: Write documentation"
-      },
-      {
-        "command": "codegpt.resetSession",
-        "title": "Reset OpenAI API session"
-      }
+    "name": "codegpt3",
+    "displayName": "CodeGPT: write and improve code using AI",
+    "description": "Use GPT3 or ChatGPT right inside the IDE to enhance and automate your coding with AI-powered assistance",
+    "version": "1.1.2",
+    "publisher": "timkmecl",
+    "icon": "resources/extensionIcon.png",
+    "license": "MIT",
+    "repository": {
+        "url": "https://github.com/timkmecl/codegpt"
+    },
+    "engines": {
+        "vscode": "^1.73.0"
+    },
+    "categories": [
+        "Other"
     ],
-    "menus": {
-      "editor/context": [
-        {
-          "command": "codegpt.ask",
-          "when": "editorTextFocus",
-          "group": "codegpt-menu-group@1"
+    "keywords": [
+        "chatgpt",
+        "openai",
+        "gpt3",
+        "copilot",
+        "ai",
+        "explain",
+        "find bugs",
+        "explain ",
+        "refactor"
+    ],
+    "activationEvents": [
+        "onView:codegpt.chatView",
+        "onCommand:codegpt.ask",
+        "onCommand:codegpt.explain",
+        "onCommand:codegpt.refactor",
+        "onCommand:codegpt.optimize",
+        "onCommand:codegpt.findProblems",
+        "onCommand:codegpt.documentation"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "codegpt.ask",
+                "title": "Ask CodeGPT"
+            },
+            {
+                "command": "codegpt.explain",
+                "title": "CodeGPT: Explain selection"
+            },
+            {
+                "command": "codegpt.refactor",
+                "title": "CodeGPT: Refactor selection"
+            },
+            {
+                "command": "codegpt.findProblems",
+                "title": "CodeGPT: Find problems"
+            },
+            {
+                "command": "codegpt.optimize",
+                "title": "CodeGPT: Optimize selection"
+            },
+            {
+                "command": "codegpt.documentation",
+                "title": "CodeGPT: Write documentation"
+            },
+            {
+                "command": "codegpt.resetSession",
+                "title": "Reset OpenAI API session"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "codegpt.ask",
+                    "when": "editorTextFocus",
+                    "group": "codegpt-menu-group@1"
+                },
+                {
+                    "command": "codegpt.explain",
+                    "when": "editorHasSelection",
+                    "group": "codegpt-menu-group@2"
+                },
+                {
+                    "command": "codegpt.refactor",
+                    "when": "editorHasSelection",
+                    "group": "codegpt-menu-group@3"
+                },
+                {
+                    "command": "codegpt.findProblems",
+                    "when": "editorHasSelection",
+                    "group": "codegpt-menu-group@4"
+                },
+                {
+                    "command": "codegpt.optimize",
+                    "when": "editorHasSelection",
+                    "group": "codegpt-menu-group@5"
+                },
+                {
+                    "command": "codegpt.documentation",
+                    "when": "editorHasSelection",
+                    "group": "codegpt-menu-group@6"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "codegpt.ask"
+                },
+                {
+                    "command": "codegpt.explain",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "codegpt.refactor",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "codegpt.findProblems",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "codegpt.optimize",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "codegpt.documentation",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "codegpt.resetSession"
+                }
+            ]
         },
-        {
-          "command": "codegpt.explain",
-          "when": "editorHasSelection",
-          "group": "codegpt-menu-group@2"
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "codegpt",
+                    "title": "CodeGPT",
+                    "icon": "resources/icon.png"
+                }
+            ]
         },
-        {
-          "command": "codegpt.refactor",
-          "when": "editorHasSelection",
-          "group": "codegpt-menu-group@3"
+        "views": {
+            "codegpt": [
+                {
+                    "type": "webview",
+                    "id": "codegpt.chatView",
+                    "name": "CodeGPT"
+                }
+            ]
         },
-        {
-          "command": "codegpt.findProblems",
-          "when": "editorHasSelection",
-          "group": "codegpt-menu-group@4"
-        },
-        {
-          "command": "codegpt.optimize",
-          "when": "editorHasSelection",
-          "group": "codegpt-menu-group@5"
-        },
-        {
-          "command": "codegpt.documentation",
-          "when": "editorHasSelection",
-          "group": "codegpt-menu-group@6"
+        "configuration": {
+            "title": "CodeGPT",
+            "type": "object",
+            "properties": {
+                "codegpt.apiKey": {
+                    "type": "string",
+                    "markdownDescription": "API key from [OpenAI](https://platform.openai.com/account/api-keys)",
+                    "order": 0
+                },
+                "codegpt.endpoint": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Your Azure OpenAI endpoint",
+                    "order": 1
+                },
+                "codegpt.deploymentName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Your Azure OpenAI Deployment Name",
+                    "order": 2
+                },
+                "codegpt.maxTokens": {
+                    "type": "number",
+                    "default": 1024,
+                    "description": "Maximum number of tokens inside response per request",
+                    "order": 3
+                },
+                "codegpt.temperature": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "Temperature to use for the GPT3 (between 0 (conservative) and 1 (creative))",
+                    "order": 4
+                },
+                "codegpt.pasteOnClick": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Paste the code from a codeblock inside the response into the editor when you click on it",
+                    "order": 5
+                },
+                "codegpt.promptPrefix.explain": {
+                    "type": "string",
+                    "default": "Explain what this code does: ",
+                    "description": "The prompt prefix used for explaining the selected code",
+                    "order": 6
+                },
+                "codegpt.promptPrefix.refactor": {
+                    "type": "string",
+                    "default": "Refactor this code and then explain what's changed: ",
+                    "description": "The prompt prefix used for refactoring the selected code",
+                    "order": 7
+                },
+                "codegpt.promptPrefix.findProblems": {
+                    "type": "string",
+                    "default": "Find problems with the following code, fix them and explain what was wrong (Do not change anything else, if there are no problems say so): ",
+                    "description": "The prompt prefix used for finding problems in the selected code",
+                    "order": 8
+                },
+                "codegpt.promptPrefix.optimize": {
+                    "type": "string",
+                    "default": "Optimize the following code if there is anything to improve, if not say so: ",
+                    "description": "The prompt prefix used for optimizing the selected code",
+                    "order": 9
+                },
+                "codegpt.promptPrefix.documentation": {
+                    "type": "string",
+                    "default": "Write documentation for the following code: ",
+                    "description": "The prompt prefix used for writing documentation for the selected code",
+                    "order": 10
+                },
+                "codegpt.selectedInsideCodeblock": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Append selected code as a codeblock (```...code...```) instead of plain text",
+                    "order": 11
+                }
+            }
         }
-      ],
-      "commandPalette": [
-        {
-          "command": "codegpt.ask"
-        },
-        {
-          "command": "codegpt.explain",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "codegpt.refactor",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "codegpt.findProblems",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "codegpt.optimize",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "codegpt.documentation",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "codegpt.resetSession"
-        }
-      ]
     },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "codegpt",
-          "title": "CodeGPT",
-          "icon": "resources/icon.png"
-        }
-      ]
+    "scripts": {
+        "vscode:prepublish": "yarn run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js",
+        "update-package-lock": "npm install --package-lock-only"
     },
-    "views": {
-      "codegpt": [
-        {
-          "type": "webview",
-          "id": "codegpt.chatView",
-          "name": "CodeGPT"
-        }
-      ]
+    "devDependencies": {
+        "@types/glob": "^8.0.0",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "16.x",
+        "@types/vscode": "^1.73.0",
+        "@typescript-eslint/eslint-plugin": "^5.45.0",
+        "@typescript-eslint/parser": "^5.45.0",
+        "@vscode/test-electron": "^2.2.0",
+        "eslint": "^8.28.0",
+        "glob": "^8.0.3",
+        "mocha": "^10.1.0",
+        "ts-loader": "^9.4.1",
+        "typescript": "^4.9.3",
+        "webpack": "^5.75.0",
+        "webpack-cli": "^5.0.0"
     },
-    "configuration": {
-      "title": "CodeGPT",
-      "type": "object",
-      "properties": {
-        "codegpt.apiKey": {
-          "type": "string",
-          "markdownDescription": "API key from [OpenAI](https://platform.openai.com/account/api-keys)",
-          "order": 0
-        },
-        "codegpt.model": {
-          "type": "string",
-          "enum": [
-            "ChatGPT",
-            "text-davinci-003",
-            "text-curie-001",
-            "code-davinci-002",
-            "code-cushman-002"
-          ],
-          "default": "text-davinci-003",
-          "description": "Which GPT3 model to use",
-          "order": 1
-        },
-        "codegpt.maxTokens": {
-          "type": "number",
-          "default": 1024,
-          "description": "Maximum number of tokens inside response per request",
-          "order": 2
-        },
-        "codegpt.temperature": {
-          "type": "number",
-          "default": 0.5,
-          "description": "Temperature to use for the GPT3 (between 0 (conservative) and 1 (creative))",
-          "order": 3
-        },
-        "codegpt.pasteOnClick": {
-          "type": "boolean",
-          "default": true,
-          "description": "Paste the code from a codeblock inside the response into the editor when you click on it",
-          "order": 4
-        },
-        "codegpt.promptPrefix.explain": {
-          "type": "string",
-          "default": "Explain what this code does: ",
-          "description": "The prompt prefix used for explaining the selected code",
-          "order": 5
-        },
-        "codegpt.promptPrefix.refactor": {
-          "type": "string",
-          "default": "Refactor this code and then explain what's changed: ",
-          "description": "The prompt prefix used for refactoring the selected code",
-          "order": 6
-        },
-        "codegpt.promptPrefix.findProblems": {
-          "type": "string",
-          "default": "Find problems with the following code, fix them and explain what was wrong (Do not change anything else, if there are no problems say so): ",
-          "description": "The prompt prefix used for finding problems in the selected code",
-          "order": 7
-        },
-        "codegpt.promptPrefix.optimize": {
-          "type": "string",
-          "default": "Optimize the following code if there is anything to improve, if not say so: ",
-          "description": "The prompt prefix used for optimizing the selected code",
-          "order": 8
-        },
-        "codegpt.promptPrefix.documentation": {
-          "type": "string",
-          "default": "Write documentation for the following code: ",
-          "description": "The prompt prefix used for writing documentation for the selected code",
-          "order": 9
-        },
-        "codegpt.selectedInsideCodeblock": {
-          "type": "boolean",
-          "default": true,
-          "description": "Append selected code as a codeblock (```...code...```) instead of plain text",
-          "order": 10
-        }
-      }
+    "dependencies": {
+        "@azure/openai": "^1.0.0-beta.10",
+        "openai": "^3.1.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "yarn run package",
-    "compile": "webpack",
-    "watch": "webpack --watch",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
-    "update-package-lock": "npm install --package-lock-only"
-  },
-  "devDependencies": {
-    "@types/glob": "^8.0.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.73.0",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "@vscode/test-electron": "^2.2.0",
-    "eslint": "^8.28.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.1.0",
-    "ts-loader": "^9.4.1",
-    "typescript": "^4.9.3",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.0"
-  },
-  "dependencies": {
-    "@azure/openai": "^1.0.0-beta.10",
-    "openai": "^3.1.0"
-  }
 }

@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-//import { Configuration, OpenAIApi } from 'openai';
 import {
     OpenAIClient,
     AzureKeyCredential,
@@ -8,7 +7,7 @@ import {
 
 import createPrompt from "./prompt";
 
-type AuthInfo = { apiKey?: string };
+type AuthInfo = { apiKey?: string; endpoint?: string; deploymentName?: string };
 export type Settings = {
     selectedInsideCodeblock?: boolean;
     pasteOnClick?: boolean;
@@ -26,6 +25,8 @@ export function activate(context: vscode.ExtensionContext) {
     // Put configuration settings into the provider
     provider.setAuthenticationInfo({
         apiKey: config.get("apiKey"),
+        endpoint: config.get("endpoint"),
+        deploymentName: config.get("deploymentName"),
     });
 
     provider.setSettings({
@@ -80,12 +81,13 @@ export function activate(context: vscode.ExtensionContext) {
     // Change the extension's settings when configuration is changed
     vscode.workspace.onDidChangeConfiguration(
         (event: vscode.ConfigurationChangeEvent) => {
+            let shouldRefreshAPI = false;
             if (event.affectsConfiguration("codegpt.apiKey")) {
                 const config = vscode.workspace.getConfiguration("codegpt");
                 provider.setAuthenticationInfo({
                     apiKey: config.get("apiKey"),
                 });
-                console.log("API key changed");
+                shouldRefreshAPI = true;
             } else if (
                 event.affectsConfiguration("codegpt.selectedInsideCodeblock")
             ) {
@@ -114,6 +116,21 @@ export function activate(context: vscode.ExtensionContext) {
                 provider.setSettings({
                     model: config.get("model") || "text-davinci-003",
                 });
+            } else if (event.affectsConfiguration("codegpt.endpoint")) {
+                const config = vscode.workspace.getConfiguration("codegpt");
+                provider.setAuthenticationInfo({
+                    endpoint: config.get("endpoint"),
+                });
+                shouldRefreshAPI = true;
+            } else if (event.affectsConfiguration("codegpt.deploymentName")) {
+                const config = vscode.workspace.getConfiguration("codegpt");
+                provider.setAuthenticationInfo({
+                    deploymentName: config.get("deploymentName"),
+                });
+                shouldRefreshAPI = true;
+            }
+            if (shouldRefreshAPI) {
+                provider.resetSession();
             }
         }
     );
@@ -138,15 +155,18 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
     };
     //private _apiConfiguration?: Configuration;
     private _apiKey?: string;
+    private _endpoint?: string;
+    private _deploymentName?: string;
 
     // In the constructor, we store the URI of the extension
     constructor(private readonly _extensionUri: vscode.Uri) {}
 
     // Set the session token and create a new API instance based on this token
-    public setAuthenticationInfo(authInfo: AuthInfo) {
+    public async setAuthenticationInfo(authInfo: AuthInfo) {
         this._apiKey = authInfo.apiKey;
-        //this._apiConfiguration = new Configuration({ apiKey: authInfo.apiKey });
-        this._newAPI();
+        this._endpoint = authInfo.endpoint;
+        this._deploymentName = authInfo.deploymentName;
+        await this._newAPI();
     }
 
     public setSettings(settings: Settings) {
@@ -156,17 +176,46 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
     public getSettings() {
         return this._settings;
     }
+    private async _newAPI() {
+        const config = vscode.workspace.getConfiguration("codegpt");
+        this._apiKey = config.get("apiKey");
+        this._endpoint = config.get("endpoint");
+        this._deploymentName = config.get("deploymentName");
+        if (this._apiKey && this._endpoint && this._deploymentName) {
+            try {
+                this._openai = new OpenAIClient(
+                    this._endpoint,
+                    new AzureKeyCredential(this._apiKey)
+                );
 
-    // This private method initializes a new ChatGPTAPI instance, using the session token if it is set
-    private _newAPI() {
-        if (!this._apiKey) {
-            console.warn(
-                "API key not set, please go to extension settings (read README.md for more info)"
-            );
+                await this._openai.getChatCompletions(this._deploymentName, [
+                    { role: "user", content: "Hello, are you there?" },
+                ]);
+
+                vscode.window.showInformationMessage(
+                    "AzureCodeGPT: Successfully connected to Azure OpenAI API."
+                );
+            } catch (err) {
+                vscode.window.showErrorMessage(
+                    "AzureCodeGPT: [Error] - Could not connect to Azure OpenAI API. Please check your API key, endpoint, and deployment name."
+                );
+            }
         } else {
-            this._openai = new OpenAIClient(
-                "",
-                new AzureKeyCredential(this._apiKey)
+            const missingConfigs = [];
+            if (!this._apiKey) {
+                missingConfigs.push("API key");
+            }
+            if (!this._endpoint) {
+                missingConfigs.push("endpoint");
+            }
+            if (!this._deploymentName) {
+                missingConfigs.push("deployment name");
+            }
+
+            const formattedMissingConfigs = missingConfigs.join(", ");
+
+            vscode.window.showWarningMessage(
+                `AzureCodeGPT: [Warning] - The following configuration item(s) are not set: ${formattedMissingConfigs}. Please go to extension settings to set them (read README.md for more info).`
             );
         }
     }
@@ -216,7 +265,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
         this._fullPrompt = [];
         this._view?.webview.postMessage({ type: "setPrompt", value: "" });
         this._view?.webview.postMessage({ type: "addResponse", value: "" });
-        this._newAPI();
+        await this._newAPI();
     }
 
     public async search(prompt?: string) {
@@ -227,7 +276,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
         // Check if the ChatGPTAPI instance is defined
         if (!this._openai) {
-            this._newAPI();
+            await this._newAPI();
         }
 
         // focus gpt activity from activity bar
@@ -248,7 +297,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
         if (!this._openai) {
             response =
-                "[ERROR] API token not set, please go to extension settings to set it (read README.md for more info)";
+                "[ERROR] API key, endpoint or model not set, please go to extension settings to set it (read README.md for more info)";
         } else {
             // If successfully signed in
             console.log("sendMessage");
@@ -281,32 +330,12 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                 };
 
                 let completion;
-                //if (this._settings.model !== "ChatGPT") {
-                //    completion = await this._openai.createCompletion({
-                //        model: this._settings.model || "code-davinci-002",
-                //        prompt: searchPrompt,
-                //        temperature: this._settings.temperature,
-                //        maxTokens: this._settings.maxTokens,
-                //        stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"],
-                //    });
-                //} else {
-                //    completion = await this._openai.createCompletion({
-                //        model: "text-chat-davinci-002-20221122",
-                //        prompt: searchPrompt,
-                //        temperature: this._settings.temperature,
-                //        maxTokens: this._settings.maxTokens,
-                //        stop: ["\n\n\n", "<|im_end|>"],
-                //    });
-                //}
-
                 if (this._currentMessageNumber !== currentMessageNumber) {
                     return;
                 }
 
-                //response = completion.data.choices[0].text || "";
-
                 completion = await this._openai.getChatCompletions(
-                    "",
+                    this._deploymentName!,
                     searchPrompt,
                     options
                 );
@@ -325,11 +354,6 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                 }
 
                 response += `\n\n---\n`;
-                // add error message if max_tokens reached
-                //if (completion.choices[0].finish_reason === "length") {
-                //    response += `\n[WARNING] The response was truncated because it reached the maximum number of tokens. You may want to increase the maxTokens setting.\n\n`;
-                //}
-                //response += `Tokens used: ${completion.data.usage?.total_tokens}`;
             } catch (error: any) {
                 let e = "";
                 if (error.response) {
@@ -413,7 +437,7 @@ class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 				</style>
 			</head>
 			<body>
-				<input class="h-10 w-full text-white bg-stone-700 p-4 text-sm" placeholder="Ask GPT3 something" id="prompt-input" />
+				<input class="h-10 w-full text-white bg-stone-700 p-4 text-sm" placeholder="Ask anything" id="prompt-input" />
 				
 				<div id="response" class="pt-4 text-sm">
 				</div>
