@@ -16,7 +16,14 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 <br>
 
+# 📢 v2.0 Release
 
+-   Based on the original <a href="https://marketplace.visualstudio.com/items?itemName=timkmecl.codegpt3">CodeGPT</a> v1.1.2
+-   I have added the ability to use it with Azure OpenAI.
+
+&nbsp;
+
+# 🌟 Preview
 <img src="examples/main.png" alt="Refactoring selected code using chatGPT"/>
 
 ## Features
