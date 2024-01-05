@@ -48,6 +48,8 @@ To use this extension, install it from the VSCode marketplace.
 
 After completing these steps, the extension should be ready to use.
 
+<img src="examples/userSettings.png" alt="User Settings"/>
+
 ## Using the Extension
 
 To use the extension, open a text editor in Visual Studio Code and open the AzureCodeGPT panel by clicking on the AzureCodeGPT icon in the sidebar. This will open a panel with an input field where you can enter your prompt or question. By clicking enter, it will be sent to GPT3. Its response will be displayed below the input field in the sidebar (note that it may take some time for it to be calculated).
