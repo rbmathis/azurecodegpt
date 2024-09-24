@@ -1,4 +1,4 @@
-import { Settings } from "./extension";
+import { Settings } from "./Helpers";
 import { ChatRequestMessage } from "@azure/openai";
 
 export default (
