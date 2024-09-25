@@ -31,6 +31,7 @@
         "azure"
     ],
     "main": "./dist/extension.js",
+    "activationEvents": ["onStartupFinished"],
     "contributes": {
         "commands": [
             {
@@ -148,13 +149,13 @@
             "properties": {
                 "azurecodegpt-auth.graphUri": {
                     "type": "string",
-                    "default":  "",
+                    "default": "",
                     "description": "Azure graph endpoint URI that will be used to determine the permissions of the user. Ex: 'https://graph.microsoft.com/.default'",
                     "order": 0
                 },
                 "azurecodegpt-auth.keyvaultUri": {
                     "type": "string",
-                    "default":  "",
+                    "default": "",
                     "description": "URI for Azure KeyVault that will be used to fetch AOAI settings. Ex: 'https://<yourvaultname>.vault.azure.net/'",
                     "order": 1
                 },
@@ -212,7 +213,6 @@
                     "description": "Append selected code as a codeblock (```...code...```) instead of plain text",
                     "order": 10
                 }
-
             }
         }
     },

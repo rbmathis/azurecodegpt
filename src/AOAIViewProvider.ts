@@ -4,12 +4,13 @@ import {
     AzureKeyCredential,
     ChatRequestMessage,
 } from "@azure/openai";
-import { SecretClient } from "@azure/keyvault-secrets";	
 import { AzureCliCredential } from "@azure/identity";
-import { AuthInfo, Settings } from "./Helpers";
-import createPrompt from "./prompt";
+import { AuthInfo, AuthHelper } from "./AuthHelper";
+import { Settings } from "./Settings";
+import { PromptHelper } from "./PromptHelper";
+import { ensureCodeBlocks } from "./Helpers";
 
-export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
+export class AOAIViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "azurecodegpt-auth.chatView";
     private _view?: vscode.WebviewView;
 
@@ -23,6 +24,8 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
     private credential = new AzureCliCredential();
 
     private _settings: Settings = {
+        graphUri: "",
+        vaultUri: "",
         selectedInsideCodeblock: false,
         pasteOnClick: true,
         maxTokens: 500,
@@ -33,134 +36,60 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
 
     // In the constructor, we store the URI of the extension
-    constructor(private readonly _extensionUri: vscode.Uri) {
-        //const credential = new AzureCliCredential();   
-    }
+    constructor(private readonly _extensionUri: vscode.Uri) {    }
 
 
-
-    // Set the session token and create a new API instance based on this token
-    public async setAuthenticationInfo(authInfo: AuthInfo) {
-        
-        //quick exit if settings are not set
-        if(!authInfo.graphUri|| !authInfo.vaultUri) {
-            vscode.window.showWarningMessage(
-                `azurecodegpt-auth: [Warning] - graphUri and keyvaultUri are requied, but not set. Please go to extension settings to set them (read README.md for more info).`
-            );
-            return;
-        }
-
-
-        //get token for current user. This will show an error if the user is not logged in via the Azure CLI
-        try{
-            let x = await this.credential.getToken(authInfo.graphUri);
-            //vscode.window.showInformationMessage(x.token);
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                vscode.window.showInformationMessage("error fetching token for the current user. Are you sure you've signed in through 'az login' via a terminal prompt?: " + e.message);
-            } else {
-                vscode.window.showInformationMessage("error fetching token for the current user. Are you sure you've signed in through 'az login' via a terminal prompt?");
-            }
-            return;
-        }
-
-
-
-        //connect to KeyVault and get AOAI settings
-        const client = new SecretClient(authInfo.vaultUri, this.credential);
-        const s1 = "AOAIEndpoint";
-        try {
-            const secret = await client.getSecret(s1);
-            //vscode.window.showInformationMessage("endpoint: "+secret.value);
-            authInfo.endpoint = secret.value;
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                vscode.window.showInformationMessage("error fetching AOAI endpoint: " + e.message);
-            } else {
-                vscode.window.showInformationMessage("error fetching AOAI endpoint.");
-            }
-        }
-
-        const s2 = "AOAIKey";
-        try {
-            const secret2 = await client.getSecret(s2);
-            //vscode.window.showInformationMessage("key: "+secret2.value);
-            authInfo.apiKey = secret2.value;
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                vscode.window.showInformationMessage("error fetching AOAIKey: " + e.message);
-            } else {
-                vscode.window.showInformationMessage("error fetching AOAIKey.");
-            }
-        }
-
-        const s3 = "AOAIDeployment";
-        try {
-            const secret3 = await client.getSecret(s3);
-            //vscode.window.showInformationMessage("deployment: "+secret3.value);
-            authInfo.deploymentName = secret3.value;
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                vscode.window.showInformationMessage("error fetching AOAI deployment name: " + e.message);
-            } else {
-                vscode.window.showInformationMessage("error fetching AOAI deployment name.");
-            }
-        }
-
-
-        this.authInfo = authInfo;
-
-        await this._newAPI(authInfo);
-    }
-
-
-
-    public setSettings(settings: Settings) {
+    // Merge settings from current configuration with new settings
+    public async setSettings(settings: Settings) {
         this._settings = { ...this._settings, ...settings };
+
+        //connect to Azure OpenAI API using the new settings
+        await this._connectToAzureOpenAPI(this.authInfo);
     }
 
+    // Return the current settings
     public getSettings() {
         return this._settings;
     }
-    private async _newAPI(authInfo?: AuthInfo) {
 
-        //quick exit if settings are missing
-        if(!authInfo) {
-            vscode.window.showInformationMessage("Authentication info is missing. Please ensure the configuration of your KeyVault. ");
+    // Connect to Azure OpenAI API
+    private async _connectToAzureOpenAPI(authInfo?: AuthInfo) {
+
+        //ensure authentication info is loaded
+        if((!this.authInfo) || (this.authInfo.hasError)) {
+            this.authInfo = await AuthHelper.authenticate(this._settings);
+        }
+
+        //check for errors
+        if (this.authInfo?.hasError) {
+            // this.authInfo = undefined;
+            vscode.window.showErrorMessage(this.authInfo!.messages.join("\n"));
             return;
         }
+        else {
+            vscode.window.showInformationMessage(this.authInfo!.messages.join("\n"));
+        }
 
-        if(!authInfo.endpoint || !authInfo.apiKey || !authInfo.deploymentName) {
-            vscode.window.showErrorMessage(
-                "azurecodegpt-auth: [Error] - settings were loaded successfully, but one or more items is blank. Please ensure the configuration of your KeyVault. "
+
+        try{
+            //connect to AOAI and run a simple test
+            this._openai = new OpenAIClient(
+                this.authInfo!.aoaiEndpoint!,
+                new AzureKeyCredential(this.authInfo!.aoaiKey!)
             );
+
+            await this._openai.getChatCompletions(this.authInfo!.aoaiDeployment!, [
+                { role: "user", content: "Hello, are you there?" },
+            ]);
+
+            vscode.window.showInformationMessage("azurecodegpt-auth: [Success] connected to Azure OpenAI API.");
+
+        } catch (err) {
+            vscode.window.showErrorMessage("azurecodegpt-auth: [Error] - Could not connect to Azure OpenAI API. Please check your API key, endpoint, and deployment name. Message: " + (err instanceof Error ? err.message : String(err)));
         }
-        else{
-
-            try{
-                this._openai = new OpenAIClient(
-                    authInfo.endpoint,
-                    new AzureKeyCredential(authInfo.apiKey)
-                );
-
-                await this._openai.getChatCompletions(authInfo.deploymentName, [
-                    { role: "user", content: "Hello, are you there?" },
-                ]);
-
-                vscode.window.showInformationMessage(
-                    "azurecodegpt-auth: Successfully connected to Azure OpenAI API."
-                );
-            } catch (err) {
-                vscode.window.showErrorMessage(
-                    "azurecodegpt-auth: [Error] - Could not connect to Azure OpenAI API. Please check your API key, endpoint, and deployment name. Message: " + (err instanceof Error ? err.message : String(err))
-                );
-            }
-        }
+        
     }
+
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -195,7 +124,7 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "prompt": {
-                    this.search(data.value);
+                    this.runChat(data.value);
                 }
             }
         });
@@ -207,10 +136,11 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
         this._fullPrompt = [];
         this._view?.webview.postMessage({ type: "setPrompt", value: "" });
         this._view?.webview.postMessage({ type: "addResponse", value: "" });
-        await this._newAPI();
+        await this._connectToAzureOpenAPI();
     }
 
-    public async search(prompt?: string) {
+
+    public async runChat(prompt?: string) {
         this._prompt = prompt;
         if (!prompt) {
             return;
@@ -218,7 +148,7 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
         // Check if the ChatGPTAPI instance is defined
         if (!this._openai) {
-            await this._newAPI(this.authInfo);
+            await this._connectToAzureOpenAPI(this.authInfo);
         }
 
         // focus gpt activity from activity bar
@@ -230,16 +160,17 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
 
         let response = "";
         this._response = "";
+
         // Get the selected text of the active editor
         const selection = vscode.window.activeTextEditor?.selection;
-        const selectedText =
-            vscode.window.activeTextEditor?.document.getText(selection);
-        let searchPrompt = createPrompt(prompt, this._settings, selectedText);
+        const selectedText = vscode.window.activeTextEditor?.document.getText(selection);
+
+        //Create a prompt to send to the OpenAI API
+        let searchPrompt = PromptHelper.createPrompt(prompt, this._settings, selectedText);
         this._fullPrompt = searchPrompt;
 
         if (!this._openai) {
-            response =
-                "[ERROR] API key, endpoint or model not set, please go to extension settings to set it (read README.md for more info)";
+            response = "[ERROR] API key, endpoint or model not set, please go to extension settings to set it (read README.md for more info)";
         } else {
             // If successfully signed in
             console.log("sendMessage");
@@ -260,8 +191,7 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
             try {
                 let currentMessageNumber = this._currentMessageNumber;
 
-                // Send the search prompt to the OpenAI API and store the response
-
+                //populate the options from settings
                 const options = {
                     temperature: this._settings.temperature,
                     maxTokens: this._settings.maxTokens,
@@ -271,41 +201,31 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                     stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"],
                 };
 
+                //dunno what this is, so commenting it for now
+                // if (this._currentMessageNumber !== currentMessageNumber) {
+                //     return;
+                // }
+                
+                //send the prompts to the AOAI endpoint
                 let completion;
-                if (this._currentMessageNumber !== currentMessageNumber) {
-                    return;
-                }
-
                 completion = await this._openai.getChatCompletions(
-                    this.authInfo?.deploymentName!,
+                    this.authInfo?.aoaiDeployment!,
                     searchPrompt,
                     options
                 );
 
+                //grab the response from AOAI
                 response = completion.choices[0].message?.content || "";
+                response = ensureCodeBlocks(response);//fixup incomplete codeblocks that might be returned
 
-                // close unclosed codeblocks
-                // Use a regular expression to find all occurrences of the substring in the string
-                const REGEX_CODEBLOCK = new RegExp("```", "g");
-                const matches = response.match(REGEX_CODEBLOCK);
-                // Return the number of occurrences of the substring in the response, check if even
-                const count = matches ? matches.length : 0;
-                if (count % 2 !== 0) {
-                    //  append ``` to the end to make the last code block complete
-                    response += "\n```";
-                }
-
-                response += `\n\n---\n`;
             } catch (error: any) {
                 let e = "";
                 if (error.response) {
-                    console.log(error.response.status);
-                    console.log(error.response.data);
                     e = `${error.response.status} ${error.response.data.message}`;
                 } else {
-                    console.log(error.message);
                     e = error.message;
                 }
+                vscode.window.showErrorMessage("azurecodegpt-auth: [Error] - Chat failed. Message: " + e);
                 response += `\n\n---\n[ERROR] ${e}`;
             }
         }
@@ -340,7 +260,7 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                 this._extensionUri,
                 "media",
                 "scripts",
-                "showdown.min.js"
+                "tailwind.min.js"
             )
         );
         const showdownUri = webview.asWebviewUri(
@@ -348,7 +268,7 @@ export class CodeGPTViewProvider implements vscode.WebviewViewProvider {
                 this._extensionUri,
                 "media",
                 "scripts",
-                "tailwind.min.js"
+                "showdown.min.js"
             )
         );
 
