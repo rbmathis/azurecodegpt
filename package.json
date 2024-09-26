@@ -1,13 +1,13 @@
 {
-    "name": "azurecodegpt-auth",
-    "displayName": "azurecodegpt-auth: write and improve code using AI",
+    "name": "aoaicodegpt",
+    "displayName": "aoaicodegpt: write and improve code using AI, in commercial and govcloud.",
     "description": "Use GPT3 or ChatGPT right inside the IDE to enhance and automate your coding with AI-powered assistance",
-    "version": "2.0.0",
-    "publisher": "JeremySemel",
+    "version": "1.0.0",
+    "publisher": "BartonMathis",
     "icon": "resources/extensionIcon.png",
     "license": "MIT",
     "repository": {
-        "url": "https://github.com/ThePush/azurecodegpt-auth"
+        "url": "https://github.com/rbmathis/aoaicodegpt"
     },
     "engines": {
         "vscode": "^1.73.0"
@@ -28,186 +28,191 @@
         "find bugs",
         "explain ",
         "refactor",
-        "azure"
+        "azure",
+        "govcloud"
     ],
     "main": "./dist/extension.js",
     "activationEvents": ["onStartupFinished"],
     "contributes": {
         "commands": [
             {
-                "command": "azurecodegpt-auth.ask",
-                "title": "Ask azurecodegpt-auth"
+                "command": "aoaicodegpt.ask",
+                "title": "Ask aoaicodegpt"
             },
             {
-                "command": "azurecodegpt-auth.explain",
-                "title": "azurecodegpt-auth: Explain selection"
+                "command": "aoaicodegpt.explain",
+                "title": "aoaicodegpt: Explain this"
             },
             {
-                "command": "azurecodegpt-auth.refactor",
-                "title": "azurecodegpt-auth: Refactor selection"
+                "command": "aoaicodegpt.refactor",
+                "title": "aoaicodegpt: Refactor this"
             },
             {
-                "command": "azurecodegpt-auth.findProblems",
-                "title": "azurecodegpt-auth: Find problems"
+                "command": "aoaicodegpt.findProblems",
+                "title": "aoaicodegpt: Find problems"
             },
             {
-                "command": "azurecodegpt-auth.optimize",
-                "title": "azurecodegpt-auth: Optimize selection"
+                "command": "aoaicodegpt.optimize",
+                "title": "aoaicodegpt: Optimize this"
             },
             {
-                "command": "azurecodegpt-auth.documentation",
-                "title": "azurecodegpt-auth: Write documentation"
+                "command": "aoaicodegpt.documentation",
+                "title": "aoaicodegpt: Write documentation"
             },
             {
-                "command": "azurecodegpt-auth.resetSession",
+                "command": "aoaicodegpt.resetSession",
                 "title": "Reset Azure OpenAI API session"
             }
         ],
         "menus": {
             "editor/context": [
                 {
-                    "command": "azurecodegpt-auth.ask",
+                    "command": "aoaicodegpt.ask",
                     "when": "editorTextFocus",
-                    "group": "azurecodegpt-auth-menu-group@1"
+                    "group": "aoaicodegpt-menu-group@1"
                 },
                 {
-                    "command": "azurecodegpt-auth.explain",
+                    "command": "aoaicodegpt.explain",
                     "when": "editorHasSelection",
-                    "group": "azurecodegpt-auth-menu-group@2"
+                    "group": "aoaicodegpt-menu-group@2"
                 },
                 {
-                    "command": "azurecodegpt-auth.refactor",
+                    "command": "aoaicodegpt.refactor",
                     "when": "editorHasSelection",
-                    "group": "azurecodegpt-auth-menu-group@3"
+                    "group": "aoaicodegpt-menu-group@3"
                 },
                 {
-                    "command": "azurecodegpt-auth.findProblems",
+                    "command": "aoaicodegpt.findProblems",
                     "when": "editorHasSelection",
-                    "group": "azurecodegpt-auth-menu-group@4"
+                    "group": "aoaicodegpt-menu-group@4"
                 },
                 {
-                    "command": "azurecodegpt-auth.optimize",
+                    "command": "aoaicodegpt.optimize",
                     "when": "editorHasSelection",
-                    "group": "azurecodegpt-auth-menu-group@5"
+                    "group": "aoaicodegpt-menu-group@5"
                 },
                 {
-                    "command": "azurecodegpt-auth.documentation",
+                    "command": "aoaicodegpt.documentation",
                     "when": "editorHasSelection",
-                    "group": "azurecodegpt-auth-menu-group@6"
+                    "group": "aoaicodegpt-menu-group@6"
                 }
             ],
             "commandPalette": [
                 {
-                    "command": "azurecodegpt-auth.ask"
+                    "command": "aoaicodegpt.ask"
                 },
                 {
-                    "command": "azurecodegpt-auth.explain",
+                    "command": "aoaicodegpt.explain",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "azurecodegpt-auth.refactor",
+                    "command": "aoaicodegpt.refactor",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "azurecodegpt-auth.findProblems",
+                    "command": "aoaicodegpt.findProblems",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "azurecodegpt-auth.optimize",
+                    "command": "aoaicodegpt.optimize",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "azurecodegpt-auth.documentation",
+                    "command": "aoaicodegpt.documentation",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "azurecodegpt-auth.resetSession"
+                    "command": "aoaicodegpt.resetSession"
                 }
             ]
         },
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "azurecodegpt-auth",
-                    "title": "azurecodegpt-auth",
+                    "id": "aoaicodegpt",
+                    "title": "aoaicodegpt",
                     "icon": "resources/icon.png"
                 }
             ]
         },
         "views": {
-            "azurecodegpt-auth": [
+            "aoaicodegpt": [
                 {
                     "type": "webview",
-                    "id": "azurecodegpt-auth.chatView",
-                    "name": "azurecodegpt-auth"
+                    "id": "aoaicodegpt.chatView",
+                    "name": "aoaicodegpt"
                 }
             ]
         },
         "configuration": {
-            "title": "azurecodegpt-auth",
+            "title": "aoaicodegpt",
             "type": "object",
             "properties": {
-                "azurecodegpt-auth.graphUri": {
+                "aoaicodegpt.azureCloud": {
                     "type": "string",
-                    "default": "",
-                    "description": "Azure graph endpoint URI that will be used to determine the permissions of the user. Ex: 'https://graph.microsoft.com/.default'",
+                    "default": "AzureCloud",
+                    "enum": [
+                        "AzureCloud",
+                        "AzureUSGovernment"
+                    ],
+                    "description": "The Azure cloud to use for Authorization and KeyVault. Ex: 'AzureCloud' or 'AzureUSGovernment'",
                     "order": 0
                 },
-                "azurecodegpt-auth.keyvaultUri": {
+                "aoaicodegpt.keyvaultName": {
                     "type": "string",
                     "default": "",
-                    "description": "URI for Azure KeyVault that will be used to fetch AOAI settings. Ex: 'https://<yourvaultname>.vault.azure.net/'",
+                    "description": "The name (not Uri) of the Azure KeyVault that contains the secrets for [AOAIDeployment], [AOAIKey], [AOAIEndpoint]",
                     "order": 1
                 },
-                "azurecodegpt-auth.maxTokens": {
+                "aoaicodegpt.maxTokens": {
                     "type": "number",
                     "default": 1024,
                     "description": "Maximum number of tokens inside response per request",
                     "order": 2
                 },
-                "azurecodegpt-auth.temperature": {
+                "aoaicodegpt.temperature": {
                     "type": "number",
                     "default": 0.5,
                     "description": "Temperature to use for the GPT3 (between 0 (conservative) and 1 (creative))",
                     "order": 3
                 },
-                "azurecodegpt-auth.pasteOnClick": {
+                "aoaicodegpt.pasteOnClick": {
                     "type": "boolean",
                     "default": true,
                     "description": "Paste the code from a codeblock inside the response into the editor when you click on it",
                     "order": 4
                 },
-                "azurecodegpt-auth.promptPrefix.explain": {
+                "aoaicodegpt.promptPrefix.explain": {
                     "type": "string",
                     "default": "Explain what this code does: ",
                     "description": "The prompt prefix used for explaining the selected code",
                     "order": 5
                 },
-                "azurecodegpt-auth.promptPrefix.refactor": {
+                "aoaicodegpt.promptPrefix.refactor": {
                     "type": "string",
                     "default": "Refactor this code and then explain what's changed: ",
                     "description": "The prompt prefix used for refactoring the selected code",
                     "order": 6
                 },
-                "azurecodegpt-auth.promptPrefix.findProblems": {
+                "aoaicodegpt.promptPrefix.findProblems": {
                     "type": "string",
                     "default": "Find problems with the following code, fix them and explain what was wrong (Do not change anything else, if there are no problems say so): ",
                     "description": "The prompt prefix used for finding problems in the selected code",
                     "order": 7
                 },
-                "azurecodegpt-auth.promptPrefix.optimize": {
+                "aoaicodegpt.promptPrefix.optimize": {
                     "type": "string",
                     "default": "Optimize the following code if there is anything to improve, if not say so: ",
                     "description": "The prompt prefix used for optimizing the selected code",
                     "order": 8
                 },
-                "azurecodegpt-auth.promptPrefix.documentation": {
+                "aoaicodegpt.promptPrefix.documentation": {
                     "type": "string",
                     "default": "Write documentation for the following code: ",
                     "description": "The prompt prefix used for writing documentation for the selected code",
                     "order": 9
                 },
-                "azurecodegpt-auth.selectedInsideCodeblock": {
+                "aoaicodegpt.selectedInsideCodeblock": {
                     "type": "boolean",
                     "default": true,
                     "description": "Append selected code as a codeblock (```...code...```) instead of plain text",
