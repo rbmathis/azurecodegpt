@@ -4,11 +4,12 @@ import {
     ChatRequestMessage,
 } from "@azure/openai";
 import { AzureCliCredential } from "@azure/identity";
-import { AuthHelper } from "./AuthHelper";
+import { KeyVaultHelper } from "./KeyVaultHelper";
 import { AOAIHelper } from "./AOAIHelper";
 import { Settings } from "./Settings";
 import { ensureCodeBlocks } from "./Helpers";
-import { connect } from "http2";
+import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
+import { escape } from "querystring";
 
 /**
  * Provides a webview for interacting with Azure OpenAI API within VS Code.
@@ -26,9 +27,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     private _currentMessageNumber = 0;
     private credential = new AzureCliCredential();
 
-    private _settings?: Settings;
-    private _aoaiHelper?: AOAIHelper;
-    private _authHelper?: AuthHelper;
+    private _settings: Settings;
 
     
 
@@ -59,34 +58,47 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
      */
     public async setSettings(settings: Settings) {
         //this._settings = { ...this._settings, ...settings };
-        this._settings = settings;
-        
-        this.connectAzure();
+        //if((this._settings!["azureCloud"] !== settings["azureCloud"]) || (this._settings!["keyvaultName"] !== settings["keyvaultName"])) {
+            this._settings = settings;
+            this.connectToAzureAOAI();
+        //}
     }
 
 
-    /**
-     * Connects to the Azure OpenAI API using the provided authentication helper.
-     * 
-     * This method attempts to establish a connection to the Azure OpenAI API. If the connection
-     * is successful, an informational message is displayed. If there is an error during the 
-     * connection process, an error message is shown with the details of the failure.
-     * 
-     * @returns {Promise<void>} A promise that resolves when the connection attempt is complete.
-     */
-    public async connectAzure() {
-        this._authHelper = await AuthHelper.getInstance(this._settings!);
-        this._aoaiHelper = await AOAIHelper.getInstance(this._settings!, this._authHelper!);
 
-        if((this._aoaiHelper!.hasError) ||(this._authHelper!.hasError)){ 
-            let msgs = this._authHelper!.messages.join("\n") + this._aoaiHelper!.messages.join("\n");
-            
-            vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to Azure Failed. Messages: ${msgs}`);
-        } 
-        else {
-            vscode.window.showInformationMessage("aoaicodegpt: [Success] - Connected to Azure successfuly and loaded AOAI configuration.");
+    private async connectToAzureAOAI(): Promise<void> {
+
+
+        try {
+            KeyVaultHelper.getInstance(this.credential, this._settings.vaultUri);
+
+
+            let tmp = new AOAIEndpointSecrets();
+            tmp.aoaiDeployment = await KeyVaultHelper.getInstance().loadSecret("aoaiDeployment");
+            tmp.aoaiEndpoint = await KeyVaultHelper.getInstance().loadSecret("aoaiEndpoint");
+            tmp.aoaiKey = await KeyVaultHelper.getInstance().loadSecret("aoaiKey");
+
+            let options: AOAIOptions = {
+                model: this._settings.model,
+                maxTokens: this._settings.maxTokens,
+                temperature: this._settings.temperature
+            };
+
+       
+                AOAIHelper.getInstance(tmp, options);
+
+                if((AOAIHelper.getInstance().hasError) ||(KeyVaultHelper.getInstance().hasError)){ 
+                    let msgs = KeyVaultHelper.getInstance().messages.join("\n") + AOAIHelper.getInstance().messages.join("\n");
+                    
+                    vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to Azure Failed. Messages: ${msgs}`);
+                } 
+                else {
+                    vscode.window.showInformationMessage("aoaicodegpt: [Success] - Connected to Azure successfuly and loaded AOAI configuration.");
+                }
+        }catch(e:any){
+            vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to Azure Failed. Message: ${e.message}`);
         }
-    }
+}
 
 
     /**
@@ -134,7 +146,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
             switch (data.type) {
                 case "codeSelected": {
                     // do nothing if the pasteOnClick option is disabled
-                    if (!this._settings!.pasteOnClick) {
+                    if (!this._settings.pasteOnClick) {
                         break;
                     }
                     let code = data.value;
@@ -166,7 +178,6 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
         this._fullPrompt = [];
         this._view?.webview.postMessage({ type: "setPrompt", value: "" });
         this._view?.webview.postMessage({ type: "addResponse", value: "" });
-        this.connectAzure(); 
     }
 
 
@@ -207,10 +218,29 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
         const selectedText = vscode.window.activeTextEditor?.document.getText(selection);
 
 
-        //Create a prompt to send to the OpenAI API
+        //ensure we have an object
+        if(!AOAIHelper.getInstance()) {
+            vscode.window.showErrorMessage("aoaicodegpt: [Error] - Azure OpenAI API not connected. Please check your settings.");
+            return;
+        }
+
+        //create the system prompt to send in advance of the user question
+        let systemPrompt = "";
+        if (this._settings.model !== "ChatGPT") {
+            systemPrompt = `You are ASSISTANT helping the USER with coding. 
+    You are intelligent, helpful and an expert developer, who always gives the correct answer and only does what instructed. You always answer truthfully and don't make things up. 
+    (When responding to the following prompt, please make sure to properly style your response using Github Flavored Markdown. 
+    Use markdown syntax for things like headings, lists, colored text, code blocks, highlights etc. Make sure not to mention markdown or stying in your actual response. 
+    Try to write code inside a single code block if possible)
+    \n\nUSER: `;
+        } else {
+            systemPrompt = `You are ChatGPT, a large language model trained by OpenAI. Please answer as concisely as possible for each response, keeping the list items to a minimum. \nUser: `;
+        }
+
+
         this._response = "";
         let searchPrompt: ChatRequestMessage[] = [];
-        searchPrompt = this._aoaiHelper!.createPrompt(prompt, selectedText)!;
+        searchPrompt = AOAIHelper.getInstance().createPrompt(systemPrompt, prompt, selectedText, this._settings.selectedInsideCodeblock);
         this._fullPrompt = searchPrompt;
         
 
@@ -232,10 +262,10 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
         try {
             let currentMessageNumber = this._currentMessageNumber;
 
-            response = (await this._aoaiHelper!.doChat(searchPrompt)) || "";
+            response = (await AOAIHelper.getInstance().doChat(searchPrompt)) || "";
 
-            if(this._aoaiHelper!.hasError) {
-                vscode.window.showErrorMessage("aoaicodegpt: [Error] - Chat failed. Message: " + this._aoaiHelper!.messages.join("\n"));
+            if(AOAIHelper.getInstance().hasError) {
+                vscode.window.showErrorMessage("aoaicodegpt: [Error] - Chat failed. Message: " + AOAIHelper.getInstance().messages.join("\n"));
             }
             
             //fixup incomplete codeblocks that might be returned
