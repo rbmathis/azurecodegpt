@@ -1,19 +1,16 @@
 import * as vscode from "vscode";
 import { AOAIViewProvider } from "./AOAIViewProvider";
-import {Settings} from "./Settings";
+import {ExtensionSettings} from "./ExtensionSettings";
 
-// This method is called when your extension is activated
+
 /**
- * Activates the Azure Code GPT extension.
- * 
- * @param {vscode.ExtensionContext} context - The context in which the extension is activated.
- * 
- * This function performs the following tasks:
- * - Loads the extension's configuration settings.
- * - Initializes a new instance of the `AOAIViewProvider` class with the configuration settings.
- * - Registers the provider with the extension's context.
- * - Defines and registers command handlers for various commands that can be called from the extension's package.json.
- * - Listens for configuration changes and updates the provider's settings accordingly.
+ * Activates the AOAI extension.
+ *
+ * This function is called when the extension is activated. It initializes the extension's configuration,
+ * sets up the AOAIViewProvider with the specified settings, registers the provider and commands, and handles
+ * configuration changes.
+ *
+ * @param context - The extension context which contains the extension URI and subscriptions.
  */
 export function activate(context: vscode.ExtensionContext) {
 
@@ -21,22 +18,22 @@ export function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration("aoaicodegpt");// Load the extension's configuration settings
 
 
-
     /**
-     * Initializes a new instance of the `AOAIViewProvider` class.
-     * 
-     * @param {vscode.Uri} context.extensionUri - The URI of the extension.
-     * @param {Object} config - The configuration object.
-     * @param {string} config.graphUri - The URI of the graph, defaults to an empty string if not provided.
-     * @param {string} config.vaultUri - The URI of the key vault, defaults to an empty string if not provided.
-     * @param {boolean} config.selectedInsideCodeblock - Indicates if selection inside code blocks is enabled, defaults to false if not provided.
-     * @param {boolean} config.pasteOnClick - Indicates if paste on click is enabled, defaults to false if not provided.
-     * @param {number} config.maxTokens - The maximum number of tokens, defaults to 500 if not provided.
-     * @param {number} config.temperature - The temperature setting for the model, defaults to 0.5 if not provided.
-     * @param {string} config.model - The model to use, defaults to "text-davinci-003" if not provided.
+     * Initializes a new instance of the AOAIViewProvider with the specified settings.
+     *
+     * @param context - The extension context which contains the extension URI.
+     * @param context.extensionUri - The URI of the extension.
+     * @param config - The configuration settings for the provider.
+     * @param config.get("azureCloud") - The Azure cloud environment. Defaults to "AzureCloud".
+     * @param config.get("keyvaultName") - The name of the Azure Key Vault. Defaults to an empty string.
+     * @param config.get("selectedInsideCodeblock") - A boolean indicating if the selection is inside a code block. Defaults to false.
+     * @param config.get("pasteOnClick") - A boolean indicating if paste on click is enabled. Defaults to false.
+     * @param config.get("model") - The model to use, e.g., "gpt-3.5-turbo". Defaults to "gpt-3.5-turbo".
+     * @param config.get<number>("maxTokens") - The maximum number of tokens. Defaults to 500.
+     * @param config.get<number>("temperature") - The temperature setting for the model. Defaults to 0.5.
      */
     const provider = new AOAIViewProvider(context.extensionUri,
-        new Settings(
+        new ExtensionSettings(
             config.get("azureCloud") || "AzureCloud",
             config.get("keyvaultName") || "",
             config.get("selectedInsideCodeblock") || false,
@@ -106,7 +103,7 @@ export function activate(context: vscode.ExtensionContext) {
             const config = vscode.workspace.getConfiguration("aoaicodegpt");
 
             
-                provider.setSettings(new Settings(
+                provider.setSettings(new ExtensionSettings(
                     config.get("azureCloud") || "AzureCloud",
                     config.get("keyvaultName") || "",
                     config.get("selectedInsideCodeblock") || false,
@@ -115,12 +112,6 @@ export function activate(context: vscode.ExtensionContext) {
                     config.get<number>("maxTokens") || 500,
                     config.get<number>("temperature") || 0.5,
                 ));
-
-
-
-            // if (event.affectsConfiguration("aoaicodegpt.azureCloud") || (event.affectsConfiguration("aoaicodegpt.keyvaultName"))){
-            //     //provider.resetSession();
-            // }
         }
     );
     
