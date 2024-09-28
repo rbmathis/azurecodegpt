@@ -196,13 +196,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
         
         let response = "";
         try {
-            let currentMessageNumber = this._currentMessageNumber;
-
             response = (await this._aoai.doChat(searchPrompt)) || "";
-
-            if(this._aoai.hasError) {
-                vscode.window.showErrorMessage("aoaicodegpt: [Error] - Chat failed. Message: " + this._aoai.messages.join("\n"));
-            }
             
             //fixup incomplete codeblocks that might be returned
             response = ensureCodeBlocks(response);

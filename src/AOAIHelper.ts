@@ -13,9 +13,7 @@ export class AOAIHelper{
     private static instance: AOAIHelper;
 
     private _openai?: OpenAIClient;
-    private _messages: string[];
     private _isConnected: boolean = false;
-    private _hasError: boolean = false;
 
 
 
@@ -23,17 +21,8 @@ export class AOAIHelper{
         if (!aoaiEndpointConfig){
             throw new Error("AOAI Endpoint Config cannot be null or undefined.");
         }
-        this._messages = [];
         this.aoaiEndpointConfig = aoaiEndpointConfig;
         this.options = options;
-    }
-
-    
-
-
-
-    public get messages(): string[] {
-        return this._messages;
     }
 
 
@@ -41,9 +30,6 @@ export class AOAIHelper{
         return this._isConnected;
     }
 
-    public get hasError(): boolean {
-        return this._hasError;
-    }
 
 
 
@@ -52,17 +38,18 @@ export class AOAIHelper{
         
         if(aoaiEndpointConfig)//create a new instance
         {
-            let x = new AOAIHelper(aoaiEndpointConfig, options ? options : this.instance.options);
-            x.connectAOAI().then((result) => {
+            let tmp = new AOAIHelper(aoaiEndpointConfig, options ? options : this.instance.options);
+
+            tmp.connectAOAI().then((result) => {
                 if(result){
-                    this.instance = x;
+                    this.instance = tmp;
                 }
                 else{
-                    throw new Error("Could not connect to AOAI.");
+                    throw new Error(`Could not connect to AOAI using endpoint:${this.instance.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.instance.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name.`);
                 }
             });
-            this.instance = x;
-            return x;
+            this.instance = tmp;
+            return tmp;
         }
         else{        
             if(options){
@@ -80,9 +67,6 @@ export class AOAIHelper{
             throw new Error("EndPoint and Options cannot be null or undefined.");
         }
 
-        //clear historical messages
-        this._messages = [];
-
         //connect to AOAI and run a simple test
         //we should have all the settings and auth ready
         try{
@@ -95,14 +79,10 @@ export class AOAIHelper{
                 { role: "user", content: "Hello, are you there?" },
             ]);
             this._isConnected = true;
-            this._hasError = false;
-            this._messages.push("aoaicodegpt: [Success] connected to Azure OpenAI API.");
             return true;
 
         } catch (err) {
-            this._messages.push(`aoaicodegpt: [Error] - Could not connect to AOAI using endpoint:${this.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name. Message: ${(err instanceof Error ? err.message : String(err))}`);
-            this._hasError = true;
-            return false;
+            throw new Error(`Could not connect to AOAI using endpoint:${this.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name. Message: ${(err instanceof Error ? err.message : String(err))}`);
         }
     }
 
@@ -150,7 +130,11 @@ export class AOAIHelper{
 
     public async doChat(prompt: ChatRequestMessage[]):Promise<string | undefined>{
 
-        this._messages= [];
+
+        //barf if we don't have a chatclient ready
+        if (!this._openai) {
+            throw new Error("OpenAI client is not initialized.");
+        }
 
         //populate the options from settings
         const options = {
@@ -162,12 +146,6 @@ export class AOAIHelper{
             stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"],
         };
 
-        //barf if we don't have a chatclient ready
-        if (!this._openai) {
-            this._messages.push("aoaigpt: [Error] - Could not get chat completions from Azure OpenAI API.");
-            this._hasError = true;
-            throw new Error("OpenAI client is not initialized.");
-        }
 
         let response = "";
         let completion;
@@ -183,9 +161,7 @@ export class AOAIHelper{
             response = completion.choices[0].message?.content || "";
         }
         catch (err) {
-            response="Could not get chat completions from Azure OpenAI API. Message: " + (err instanceof Error ? err.message : String(err));   
-            this._messages.push("aoaigpt: [Error] - Could not get chat completions from Azure OpenAI API. Message: " + (err instanceof Error ? err.message : String(err)));            
-            this._hasError = true;
+            throw new Error("Could not get chat completions from Azure OpenAI API. Message: " + (err instanceof Error ? err.message : String(err)));   
         }
         return response;
     }

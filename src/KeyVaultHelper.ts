@@ -45,14 +45,14 @@ export class KeyVaultHelper
    
 
     public async loadSecret(name:string) : Promise<string> {
-        const client = new SecretClient(KeyVaultHelper.instance.vaultUri, this.cliCredential);
+        const client = new SecretClient(this.vaultUri, this.cliCredential);
         let secretValue = "";
         try{
             const secret = await client.getSecret(name);
             secretValue = secret.value!;
         }
         catch (e) {
-            throw new Error("Error loading secret. ");
+            throw new Error(`Error loading secret[${name}] from KeyVault [${this.vaultUri}]. `);
         }
         return secretValue;
     }
