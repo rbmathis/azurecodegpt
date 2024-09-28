@@ -6,8 +6,7 @@ import {
     ChatRequestUserMessage, 
     ChatRequestAssistantMessage
 } from "@azure/openai";
-import type { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
-import { Settings } from "./Settings";
+import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
 
 
 export class AOAIHelper{
@@ -53,7 +52,7 @@ export class AOAIHelper{
         
         if(aoaiEndpointConfig)//create a new instance
         {
-            let x = new AOAIHelper(aoaiEndpointConfig, options || this.instance.options);
+            let x = new AOAIHelper(aoaiEndpointConfig, options ? options : this.instance.options);
             x.connectAOAI().then((result) => {
                 if(result){
                     this.instance = x;
@@ -69,7 +68,7 @@ export class AOAIHelper{
             if(options){
                 this.instance.options = options;
             }
-            return AOAIHelper.instance;
+            return this.instance;
         }     
     }
 
@@ -101,7 +100,7 @@ export class AOAIHelper{
             return true;
 
         } catch (err) {
-            this._messages.push("aoaicodegpt: [Error] - Could not connect to Azure OpenAI API. Please check your API key, endpoint, and deployment name. Message: " + (err instanceof Error ? err.message : String(err)));
+            this._messages.push(`aoaicodegpt: [Error] - Could not connect to AOAI using endpoint:${this.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name. Message: ${(err instanceof Error ? err.message : String(err))}`);
             this._hasError = true;
             return false;
         }

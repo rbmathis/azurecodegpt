@@ -9,15 +9,8 @@ import { AOAIHelper } from "./AOAIHelper";
 import { Settings } from "./Settings";
 import { ensureCodeBlocks } from "./Helpers";
 import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
-import { escape } from "querystring";
 
-/**
- * Provides a webview for interacting with Azure OpenAI API within VS Code.
- * Implements the `vscode.WebviewViewProvider` interface to manage the webview lifecycle.
- * 
- * @class
- * @implements {vscode.WebviewViewProvider}
- */
+
 export class AOAIViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "aoaicodegpt.chatView";
     private _view?: vscode.WebviewView;
@@ -26,105 +19,72 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     private _fullPrompt?: ChatRequestMessage[];
     private _currentMessageNumber = 0;
     private credential = new AzureCliCredential();
-
     private _settings: Settings;
+    private _kv?: KeyVaultHelper;
+    private _aoai?: AOAIHelper;
 
     
 
-    /**
-     * Creates an instance of AOAIViewProvider.
-     * 
-     * @param _extensionUri - The URI of the extension.
-     * @param settings - The settings object. Must not be null or undefined.
-     * 
-     * @throws {Error} If the settings parameter is null or undefined.
-     */
     constructor(private readonly _extensionUri: vscode.Uri, settings:Settings) {  
         
         this._settings = settings;
+
+        //ensure settings are configured
         if ((!settings) || (!settings.azureCloud) || (!settings.keyvaultName)) {
             vscode.window.showErrorMessage("aoaicodegpt: [Error] - Settings must be configured for [azureCloud] and [keyvaultName].");
             return;
         }
-        //this.connectAzure();
+
     }
 
 
-    /**
-     * Updates the current settings with the provided settings and connects to the Azure OpenAI API using the new settings.
-     * 
-     * @param settings - An object containing the new settings to be applied.
-     * @returns A promise that resolves when the connection to the Azure OpenAI API is established.
-     */
     public async setSettings(settings: Settings) {
-        //this._settings = { ...this._settings, ...settings };
-        //if((this._settings!["azureCloud"] !== settings["azureCloud"]) || (this._settings!["keyvaultName"] !== settings["keyvaultName"])) {
-            this._settings = settings;
-            this.connectToAzureAOAI();
-        //}
+        this._settings = settings;
+        this.connectToAzureAOAI();
     }
 
 
 
     private async connectToAzureAOAI(): Promise<void> {
-
-
         try {
-            KeyVaultHelper.getInstance(this.credential, this._settings.vaultUri);
 
+            //load secrets from keyvault
+            this._kv = KeyVaultHelper.getInstance(this.credential, this._settings.vaultUri)!;
+            let secrets = new AOAIEndpointSecrets();
+            secrets.aoaiDeployment = await this._kv.loadSecret("aoaiDeployment");
+            secrets.aoaiEndpoint = await this._kv.loadSecret("aoaiEndpoint");
+            secrets.aoaiKey = await this._kv.loadSecret("aoaiKey");
 
-            let tmp = new AOAIEndpointSecrets();
-            tmp.aoaiDeployment = await KeyVaultHelper.getInstance().loadSecret("aoaiDeployment");
-            tmp.aoaiEndpoint = await KeyVaultHelper.getInstance().loadSecret("aoaiEndpoint");
-            tmp.aoaiKey = await KeyVaultHelper.getInstance().loadSecret("aoaiKey");
+            //ensure AOAI is govcloud if the setting is set
+            if(this._settings.azureCloud === "AzureUSGovernment") {
+                if(secrets.aoaiEndpoint.lastIndexOf(".us") === -1) {
+                    vscode.window.showErrorMessage("aoaicodegpt: [Error] - The setting for [AzureCloud] is set for AzureUSGoverment, but the AOAI endpoint loaded from KeyVault doesn't appear to be a GovCloud endpoint.  Please check the secrets in KeyVault to ensure the value for [AOAIEndpoint] is configured for a govCloud AOAI endpoint.");
+                    return;
+                }
+            }
 
+            //connect to AOAI
             let options: AOAIOptions = {
                 model: this._settings.model,
                 maxTokens: this._settings.maxTokens,
                 temperature: this._settings.temperature
             };
+            this._aoai = AOAIHelper.getInstance(secrets, options);
 
-       
-                AOAIHelper.getInstance(tmp, options);
+            vscode.window.showInformationMessage("aoaicodegpt: [Success] - Connected to Azure successfuly and loaded AOAI configuration.");
 
-                if((AOAIHelper.getInstance().hasError) ||(KeyVaultHelper.getInstance().hasError)){ 
-                    let msgs = KeyVaultHelper.getInstance().messages.join("\n") + AOAIHelper.getInstance().messages.join("\n");
-                    
-                    vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to Azure Failed. Messages: ${msgs}`);
-                } 
-                else {
-                    vscode.window.showInformationMessage("aoaicodegpt: [Success] - Connected to Azure successfuly and loaded AOAI configuration.");
-                }
         }catch(e:any){
-            vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to Azure Failed. Message: ${e.message}`);
+            vscode.window.showErrorMessage(`aoaicodegpt: [Error] - Connection to AOAI Failed. Message: ${e.message}`);
         }
 }
 
 
-    /**
-     * Retrieves the current settings.
-     *
-     * @returns The current settings.
-     */
     public getSettings() {
         return this._settings;
     }
 
 
-    /**
-     * Resolves the webview view when it becomes visible.
-     * 
-     * @param webviewView - The webview view to be resolved.
-     * @param context - Additional context for the resolve request.
-     * @param _token - A cancellation token.
-     * 
-     * This method sets up the webview with the necessary options and HTML content.
-     * It also adds an event listener to handle messages received from the webview.
-     * 
-     * Message Types:
-     * - "codeSelected": Inserts the selected code as a snippet into the active text editor if the `pasteOnClick` setting is enabled.
-     * - "prompt": Executes the `runChat` method with the provided value.
-     */
+
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
@@ -165,13 +125,6 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     }
 
 
-    /**
-     * Resets the current session by clearing the prompt, response, and full prompt array.
-     * Sends messages to the webview to reset the prompt and response.
-     * Re-authenticates the user and connects to the Azure OpenAI API using the new settings.
-     * 
-     * @returns {Promise<void>} A promise that resolves when the session has been reset and reconnected.
-     */
     public async resetSession() {
         this._prompt = "";
         this._response = "";
@@ -181,23 +134,6 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     }
 
 
-    /**
-     * Executes a chat operation using the provided prompt. If no prompt is provided, the function exits early.
-     * The function focuses on the chat view, retrieves the selected text from the active editor, constructs a prompt,
-     * and sends it to the OpenAI API. The response is then displayed in the chat view.
-     * 
-     * @param {string} [prompt] - The prompt to send to the OpenAI API.
-     * @returns {Promise<void>} A promise that resolves when the chat operation is complete.
-     * 
-     * @remarks
-     * - If no prompt is provided, the function exits early.
-     * - The function ensures the chat view is focused and visible.
-     * - Retrieves the selected text from the active editor to include in the prompt.
-     * - Constructs a prompt using the provided prompt, settings, and selected text.
-     * - Sends the prompt to the OpenAI API and handles the response.
-     * - Displays the response in the chat view.
-     * - Handles errors by showing error messages in the VS Code window.
-     */
     public async runChat(prompt?: string) {
         
         //quick exit if no prompt
@@ -219,7 +155,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
 
 
         //ensure we have an object
-        if(!AOAIHelper.getInstance()) {
+        if(!this._aoai) {
             vscode.window.showErrorMessage("aoaicodegpt: [Error] - Azure OpenAI API not connected. Please check your settings.");
             return;
         }
@@ -240,7 +176,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
 
         this._response = "";
         let searchPrompt: ChatRequestMessage[] = [];
-        searchPrompt = AOAIHelper.getInstance().createPrompt(systemPrompt, prompt, selectedText, this._settings.selectedInsideCodeblock);
+        searchPrompt = this._aoai.createPrompt(systemPrompt, prompt, selectedText, this._settings.selectedInsideCodeblock);
         this._fullPrompt = searchPrompt;
         
 
@@ -262,10 +198,10 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
         try {
             let currentMessageNumber = this._currentMessageNumber;
 
-            response = (await AOAIHelper.getInstance().doChat(searchPrompt)) || "";
+            response = (await this._aoai.doChat(searchPrompt)) || "";
 
-            if(AOAIHelper.getInstance().hasError) {
-                vscode.window.showErrorMessage("aoaicodegpt: [Error] - Chat failed. Message: " + AOAIHelper.getInstance().messages.join("\n"));
+            if(this._aoai.hasError) {
+                vscode.window.showErrorMessage("aoaicodegpt: [Error] - Chat failed. Message: " + this._aoai.messages.join("\n"));
             }
             
             //fixup incomplete codeblocks that might be returned
@@ -296,16 +232,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     }
 
 
-    /**
-     * Generates the HTML content for the webview.
-     * 
-     * This method constructs the HTML structure for the webview, including the necessary
-     * script and style references. It uses the provided `vscode.Webview` instance to
-     * generate URIs for the scripts and stylesheets that will be included in the HTML.
-     * 
-     * @param webview - The `vscode.Webview` instance used to generate URIs for the resources.
-     * @returns The HTML content as a string.
-     */
+    
     private _getHtmlForWebview(webview: vscode.Webview) {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, "media", "main.js")

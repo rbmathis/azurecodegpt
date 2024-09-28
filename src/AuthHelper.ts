@@ -6,19 +6,5 @@ export class AuthHelper
     public static async ensureCliCredential(cliCredential: AzureCliCredential, azuregraphEndpoint:string): Promise<AccessToken> {
 
         return await cliCredential.getToken(azuregraphEndpoint);
-
-        // let _token;
-        
-        // try{
-        //     _token = await cliCredential.getToken(azuregraphEndpoint);
-        // }
-        // catch (e:any) {
-        //     throw new Error(`Failed to acquire access token: ${e.message}`);
-        // }
-
-        // if (!_token) {
-        //     throw new Error("Failed to acquire access token");
-        // }
-        // return _token;
     }
 }
