@@ -47,11 +47,10 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 ## Installation
 
-To use this extension, install it from the VSCode marketplace.
-
-1. After the installation is complete, you will need to specify the Azure cloud type and name for the KeyVault within the extension settings in VSCode. To do this, open the `Settings` panel by going to the `File` menu and selecting `Preferences`, then `Settings`.
-2. In the search bar, type `aoaigpt` to filter the settings list.
-3. In the aoaigpt section, enter your values.
+1. clone this repo
+2. `npm install vsce`
+3. From the cloned directory: `vsce package`
+4. Drag/drop the .vsix file from the folder onto VSCode Extensions
 
 After completing these steps, the extension should be ready to use after a restart.
 
