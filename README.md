@@ -49,15 +49,28 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 To use this extension, install it from the VSCode marketplace.
 
-1. After the installation is complete, you will need to add your Azure Graph Uri endpoint and KeyVault Uri to the extension settings in VSCode. To do this, open the `Settings` panel by going to the `File` menu and selecting `Preferences`, then `Settings`.
+1. After the installation is complete, you will need to specify the Azure cloud type and name for the KeyVault within the extension settings in VSCode. To do this, open the `Settings` panel by going to the `File` menu and selecting `Preferences`, then `Settings`.
 2. In the search bar, type `aoaigpt` to filter the settings list.
 3. In the aoaigpt section, enter your values.
 
 After completing these steps, the extension should be ready to use after a restart.
 
-<img src="examples/userSettings.png" alt="User Settings"/>
+<img src="examples/settings.png" alt="User Settings"/>
+
+## KeyVault Configuration
+
+The KeyVault must contain secrets for the following settings:
+ - AOAIAPIVersion : required by the latest openai SDK.
+ - AOAIDeployment: the name of the deployment within Azure Open AI
+ - AOAIEndpoint: the Uri to the endpoint hosted by Azure Open AI
+ - AOAIKey: a valid key to use to connect to the Azure Open AI endpoint
+<img src="examples/keyvault.png" alt="Writing new code using chatGPT" width="500"/>
+
 
 ## Using the Extension
+
+The extension uses an AzureCliCredential to connect to an Azure Key Vault to load the secrets for Azure Open AI.  
+First, login to the Azure CLI by running `az login`. For government users, first run `az cloud set --name AzureUSGovernment`.  Once logged-in, the extension will use this credential to check for access to the KeyVault.  The current user must have an IAM role that allows the reading of secrets. "Key Vault Secrets User" is sufficient.  
 
 To use the extension, open a text editor in Visual Studio Code and open the aoaigpt panel by clicking on the aoaigpt icon in the sidebar. This will open a panel with an input field where you can enter your prompt or question. By clicking enter, it will be sent to AOAI. Its response will be displayed below the input field in the sidebar (note that it may take some time for it to be calculated).
 
@@ -75,9 +88,9 @@ You can select some code in the editor, right click on it and choose one of the 
 #### Commands:
 - `Ask aoaigpt`: will provide a prompt for you to enter any query
 - `aoaigpt: Explain selection`: will explain what the selected code does
-- `aoaigpt: Refactor selection`: will try to refactor the selected code
+- `aoaigpt: Refactor and Optimize selection`: will try to refactor and optimize the selected code
 - `aoaigpt: Find problems`: looks for problems/errors in the selected code, fixes and explains them
-- `aoaigpt: Optimize selection`: tries to optimize the selected code
+- `aoaigpt: Write tests` : tries to create unit tests for the selected code
 
 `Ask aoaigpt` is also available when nothing is selected. For the other four commands, you can **customize the exact prompt** that will be sent to the AI by editing the extension settings in VSCode Preferences.
 
