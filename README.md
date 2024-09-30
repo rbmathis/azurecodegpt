@@ -23,7 +23,7 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 <br>
 
-# 📢 v1.0 Release
+# 📢 v1.0 Release - IMPORTANT: Use v2 if you're looking for the latest version
 
 -   Based on the original <a href="https://marketplace.visualstudio.com/items?itemName=jeremysemel.azurecodegpt">CodeGPT</a> v1.1.2
 -   I have added the ability to use Azure KeyVault to lookup the necessary secrets so that organizations can adopt this without sharing connection secrets.
