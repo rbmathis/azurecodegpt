@@ -1,4 +1,4 @@
-# azurecodegpt-auth: GPT3 and ChatGPT extension for VSCode
+# aoaigpt: GPT3 and ChatGPT extension for VSCode
 
 <p align="center">
 This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security copmliance restraints. The configuration for this version requires you to set the Azure Graph endpoint Uri for authorization in commercial/govcloud/IL5, and a Uri to an Azure KeyVault in commercial or AzureGov that contains the necessary secrets:
@@ -6,6 +6,7 @@ This project is a large rewrite of  <a href="https://github.com/ThePush/azurecod
 - `AOAIDeployment`: the name of the AOAI deployment. Ex. "gpt-35-turbo" or "gpt-4o"	
 - `AOAIEndpoint`: the Uri of AOAI instance. Ex. https://yourname.openai.azure.us/ or https://yourname.openai.azure.com/
 - `AOAIKey` : the API Key from the AOAI instance
+= `AOAIAPIVersion`: the version of the OpenAI API used to interact with the AOAI endpoint
 </p>
 
 ### Imperatives:
@@ -18,7 +19,6 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 ### Links:
 
-- **[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bartonmathis.aoaigpt)**
 - **[Github Repository](https://github.com/rbmathis/aoaigpt)**
 
 <br>
