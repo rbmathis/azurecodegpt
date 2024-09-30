@@ -28,7 +28,6 @@ export function activate(context: vscode.ExtensionContext) {
      * @param config.get("keyvaultName") - The name of the Azure Key Vault. Defaults to an empty string.
      * @param config.get("selectedInsideCodeblock") - A boolean indicating if the selection is inside a code block. Defaults to false.
      * @param config.get("pasteOnClick") - A boolean indicating if paste on click is enabled. Defaults to false.
-     * @param config.get("model") - The model to use, e.g., "gpt-3.5-turbo". Defaults to "gpt-3.5-turbo".
      * @param config.get<number>("maxTokens") - The maximum number of tokens. Defaults to 500.
      * @param config.get<number>("temperature") - The temperature setting for the model. Defaults to 0.5.
      */
@@ -38,7 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
             config.get("keyvaultName") || "",
             config.get("selectedInsideCodeblock") || false,
             config.get("pasteOnClick") || false,
-            config.get("model") || "gpt-3.5-turbo",
             config.get<number>("maxTokens") || 500,
             config.get<number>("temperature") || 0.5,
             
@@ -72,28 +70,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     // Register the commands that can be called from the extension's package.json
-    context.subscriptions.push(
-        vscode.commands.registerCommand("aoaicodegpt.ask", () =>
-            vscode.window
-                .showInputBox({ prompt: "What do you want to do?" })
+    const commands = [
+        { name: "aoaicodegpt.ask", handler: () => 
+            vscode.window.showInputBox({ prompt: "What do you want to do?" })
                 .then((value) => provider.runChat(value))
-        ),
-        vscode.commands.registerCommand("aoaicodegpt.explain", () =>
-            commandHandler("promptPrefix.explain")
-        ),
-        vscode.commands.registerCommand("aoaicodegpt.refactor", () =>
-            commandHandler("promptPrefix.refactor")
-        ),
-        vscode.commands.registerCommand("aoaicodegpt.optimize", () =>
-            commandHandler("promptPrefix.optimize")
-        ),
-        vscode.commands.registerCommand("aoaicodegpt.findProblems", () =>
-            commandHandler("promptPrefix.findProblems")
-        ),
-        vscode.commands.registerCommand("aoaicodegpt.documentation", () =>
-            commandHandler("promptPrefix.documentation")
-        )
-    );
+        },
+        { name: "aoaicodegpt.explain", handler: () => commandHandler("promptPrefix.explain") },
+        { name: "aoaicodegpt.refactor", handler: () => commandHandler("promptPrefix.refactor") },
+        { name: "aoaicodegpt.findProblems", handler: () => commandHandler("promptPrefix.findProblems") },
+        { name: "aoaicodegpt.documentation", handler: () => commandHandler("promptPrefix.documentation") },
+        { name: "aoaicodegpt.writetests", handler: () => commandHandler("promptPrefix.writetests") }
+    ];
+
+    commands.forEach(command => {
+        context.subscriptions.push(
+            vscode.commands.registerCommand(command.name, command.handler)
+        );
+    });
 
 
     // Change the extension's settings when configuration is changed
@@ -108,7 +101,6 @@ export function activate(context: vscode.ExtensionContext) {
                     config.get("keyvaultName") || "",
                     config.get("selectedInsideCodeblock") || false,
                     config.get("pasteOnClick") || false,
-                    config.get<string>("model") || "gpt-3.5-turbo",
                     config.get<number>("maxTokens") || 500,
                     config.get<number>("temperature") || 0.5,
                 ));

@@ -32,7 +32,9 @@
         "govcloud"
     ],
     "main": "./dist/extension.js",
-    "activationEvents": ["onStartupFinished"],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
     "contributes": {
         "commands": [
             {
@@ -45,19 +47,19 @@
             },
             {
                 "command": "aoaicodegpt.refactor",
-                "title": "aoaicodegpt: Refactor this"
+                "title": "aoaicodegpt: Refactor and Optimize this"
             },
             {
                 "command": "aoaicodegpt.findProblems",
                 "title": "aoaicodegpt: Find problems"
             },
             {
-                "command": "aoaicodegpt.optimize",
-                "title": "aoaicodegpt: Optimize this"
-            },
-            {
                 "command": "aoaicodegpt.documentation",
                 "title": "aoaicodegpt: Write documentation"
+            },
+            {
+                "command": "aoaicodegpt.writetests",
+                "title": "aoaicodegpt: Write tests"
             }
         ],
         "menus": {
@@ -83,12 +85,12 @@
                     "group": "aoaicodegpt-menu-group@4"
                 },
                 {
-                    "command": "aoaicodegpt.optimize",
+                    "command": "aoaicodegpt.documentation",
                     "when": "editorHasSelection",
                     "group": "aoaicodegpt-menu-group@5"
                 },
                 {
-                    "command": "aoaicodegpt.documentation",
+                    "command": "aoaicodegpt.writetests",
                     "when": "editorHasSelection",
                     "group": "aoaicodegpt-menu-group@6"
                 }
@@ -110,11 +112,11 @@
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "aoaicodegpt.optimize",
+                    "command": "aoaicodegpt.documentation",
                     "when": "editorHasSelection"
                 },
                 {
-                    "command": "aoaicodegpt.documentation",
+                    "command": "aoaicodegpt.writetests",
                     "when": "editorHasSelection"
                 }
             ]
@@ -183,8 +185,8 @@
                 },
                 "aoaicodegpt.promptPrefix.refactor": {
                     "type": "string",
-                    "default": "Refactor this code and then explain what's changed: ",
-                    "description": "The prompt prefix used for refactoring the selected code",
+                    "default": "Refactor and Optimize this code and then explain what's changed: ",
+                    "description": "The prompt prefix used to refactor/optimize the selected code",
                     "order": 6
                 },
                 "aoaicodegpt.promptPrefix.findProblems": {
@@ -193,16 +195,16 @@
                     "description": "The prompt prefix used for finding problems in the selected code",
                     "order": 7
                 },
-                "aoaicodegpt.promptPrefix.optimize": {
-                    "type": "string",
-                    "default": "Optimize the following code if there is anything to improve, if not say so: ",
-                    "description": "The prompt prefix used for optimizing the selected code",
-                    "order": 8
-                },
                 "aoaicodegpt.promptPrefix.documentation": {
                     "type": "string",
                     "default": "Write documentation for the following code: ",
                     "description": "The prompt prefix used for writing documentation for the selected code",
+                    "order": 8
+                },
+                "aoaicodegpt.promptPrefix.writetests": {
+                    "type": "string",
+                    "default": "Generate automated test methods code for this method: ",
+                    "description": "The prompt prefix used for creating tests for the selected code",
                     "order": 9
                 },
                 "aoaicodegpt.selectedInsideCodeblock": {
@@ -245,7 +247,6 @@
     "dependencies": {
         "@azure/identity": "^4.4.1",
         "@azure/keyvault-secrets": "^4.8.0",
-        "@azure/openai": "^1.0.0-beta.10",
-        "openai": "^3.1.0"
+        "openai": "^4.65.0"
     }
 }

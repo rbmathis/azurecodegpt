@@ -1,4 +1,4 @@
-import { AzureCliCredential } from "@azure/identity";
+import { AccessToken, AzureCliCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";	
 import { AuthHelper } from "./AuthHelper";
 
@@ -10,63 +10,50 @@ export class KeyVaultHelper
 {
     private static instance: KeyVaultHelper;
 
-    
+
     /**
      * Constructs an instance of KeyVaultHelper.
      * 
-     * @param cliCredential - The Azure CLI credential used for authentication.
-     * @param vaultUri - The URI of the Azure Key Vault.
-     * 
-     * @throws {Error} If authentication fails.
+     * @param cliCredential - The Azure CLI credential to use for authentication.
+     * @param vaultUri - The URI of the Key Vault.
      */
     private constructor(public cliCredential: AzureCliCredential, public vaultUri: string) {
-
-        AuthHelper.ensureCliCredential(cliCredential, vaultUri).then((result: any) => {
-            if(!result){
-                throw new Error("Error authenticating.");
-            }
-        });
+        AuthHelper.ensureCliCredential(cliCredential, vaultUri)
+            .then((result: AccessToken) => {
+                if (!result) {
+                    throw new Error("Error authenticating.");
+                }
+            })
+            .catch((error: Error) => {
+                throw new Error(`Error during authentication: ${error.message}`);
+            });
     }
 
 
     /**
-     * Retrieves the singleton instance of the KeyVaultHelper class.
+     * Retrieves an instance of the `KeyVaultHelper` class. If a `cliCredential` and `vaultUri` are provided, 
+     * it creates a new instance and attempts to connect to KeyVault. If the connection is successful, 
+     * the new instance is set as the singleton instance. If the connection fails, an error is thrown.
+     * If no `cliCredential` or `vaultUri` are provided, the existing singleton instance is returned.
      * 
-     * This method can be called with or without arguments. If called without arguments,
-     * it returns the existing instance if it exists, otherwise it throws an error.
-     * If called with both `cliCredential` and `vaultUri`, it creates a new instance.
-     * If called with only one of the arguments, it uses the provided argument and the
-     * existing value of the other argument to create a new instance.
-     * 
-     * @param cliCredential - Optional. The Azure CLI credential to use for authentication.
-     * @param vaultUri - Optional. The URI of the Key Vault.
-     * @returns The singleton instance of the KeyVaultHelper class.
-     * @throws {Error} If no arguments are provided and the instance has not been initialized yet.
+     * @param cliCredential - Optional Azure CLI credential for authentication.
+     * @param vaultUri - Optional URI of the Key Vault.
+     * @returns The singleton instance of the `KeyVaultHelper` class.
+     * @throws Will throw an error if the connection to KeyVault fails.
      */
-    public static getInstance(cliCredential?: AzureCliCredential, vaultUri?:string): KeyVaultHelper {
-
-        //no args, so just return the existing instance
-        if((!cliCredential)&&(!vaultUri)) {
-            if(KeyVaultHelper.instance) {
-                return KeyVaultHelper.instance;
+    public static getInstance(cliCredential?: AzureCliCredential, vaultUri?: string): KeyVaultHelper {
+        if (!KeyVaultHelper.instance) {
+            if (!cliCredential || !vaultUri) {
+                throw new Error("[AzureCliCredential] and [VaultUri] must be provided for the first initialization.");
             }
-            else {
-                throw new Error("[AzureCliCredential] and [VaultUri] must provided for the first initialization.");
-            }
+            KeyVaultHelper.instance = new KeyVaultHelper(cliCredential, vaultUri);
+        } else if (cliCredential || vaultUri) {
+            KeyVaultHelper.instance = new KeyVaultHelper(
+                cliCredential || KeyVaultHelper.instance.cliCredential,
+                vaultUri || KeyVaultHelper.instance.vaultUri
+            );
         }
-
-        //new args, so create a new instance
-        else {
-            try {
-                let tmp = new KeyVaultHelper(cliCredential ? cliCredential : this.instance.cliCredential, vaultUri ? vaultUri :  this.instance.vaultUri);
-                KeyVaultHelper.instance = tmp;
-            }
-            catch (e) {
-                throw new Error("Error creating new instance of KeyVaultHelper.");
-            }
-            
-            return KeyVaultHelper.instance;
-        }
+        return KeyVaultHelper.instance;
     }
    
 
@@ -77,17 +64,17 @@ export class KeyVaultHelper
      * @returns A promise that resolves to the value of the secret.
      * @throws An error if the secret cannot be loaded from Key Vault.
      */
-    public async loadSecret(name:string) : Promise<string> {
+    public async loadSecret(name: string): Promise<string> {
         const client = new SecretClient(this.vaultUri, this.cliCredential);
-        let secretValue = "";
-        try{
-            const secret = await client.getSecret(name);
-            secretValue = secret.value!;
+        try {
+            const { value } = await client.getSecret(name);
+            if (!value) {
+                throw new Error(`Secret [${name}] has no value.`);
+            }
+            return value;
+        } catch (error: any) {
+            throw new Error(`Error loading secret [${name}] from KeyVault [${this.vaultUri}]. Error: ${error.message}`);
         }
-        catch (e) {
-            throw new Error(`Error loading secret[${name}] from KeyVault [${this.vaultUri}]. `);
-        }
-        return secretValue;
     }
 
 }

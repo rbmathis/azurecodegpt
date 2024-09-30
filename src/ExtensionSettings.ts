@@ -15,14 +15,15 @@ export class ExtensionSettings  {
      * - If `azureCloud` has any other value, it returns an error message indicating an invalid Azure Cloud setting.
      */
     public get graphUri(): string {
-        if(this.azureCloud==="AzureCloud"){
-            return "https://graph.microsoft.com/.default";
-        }else if(this.azureCloud==="AzureUSGovernment"){
-            return "https://graph.microsoft.us/.default";
-        }else{
-            return "[Error]: Invalid Azure Cloud setting ";
-        }
+        const uriMap: { [key: string]: string } = {
+            "AzureCloud": "https://graph.microsoft.com/.default",
+            "AzureUSGovernment": "https://graph.microsoft.us/.default"
+        };
+
+        return uriMap[this.azureCloud] || "[Error]: Invalid Azure Cloud setting";
     }
+
+    
     /**
      * Gets the URI of the Azure Key Vault based on the specified Azure cloud environment.
      *
@@ -34,27 +35,31 @@ export class ExtensionSettings  {
      * - For any other value of `azureCloud`, an error message is returned.
      */
     public get vaultUri(): string {
-        if(this.azureCloud==="AzureCloud"){
-            return `https://${this.keyvaultName}.vault.azure.net`;
-        }else if(this.azureCloud==="AzureUSGovernment"){
-            return `https://${this.keyvaultName}.vault.usgovcloudapi.net`;
-        }else{
-            return "[Error]: Invalid Azure Cloud setting ";
-        }
+        const uriMap: { [key: string]: string } = {
+            "AzureCloud": `https://${this.keyvaultName}.vault.azure.net`,
+            "AzureUSGovernment": `https://${this.keyvaultName}.vault.usgovcloudapi.net`
+        };
+
+        return uriMap[this.azureCloud] || "[Error]: Invalid Azure Cloud setting";
     }
+
 
     /**
-     * Constructs an instance of ExtensionSettings.
+     * Initializes a new instance of the ExtensionSettings class with the specified settings.
      * 
      * @param azureCloud - The Azure cloud environment.
-     * @param keyvaultName - The name of the Key Vault.
-     * @param selectedInsideCodeblock - Optional flag indicating if selection is inside a code block.
-     * @param pasteOnClick - Optional flag indicating if paste on click is enabled.
-     * @param model - Optional model name.
-     * @param maxTokens - Optional maximum number of tokens.
-     * @param temperature - Optional temperature setting for the model.
+     * @param keyvaultName - The name of the Azure Key Vault.
+     * @param selectedInsideCodeblock - A boolean indicating if the selection is inside a code block.
+     * @param pasteOnClick - A boolean indicating if paste on click is enabled.
+     * @param maxTokens - The maximum number of tokens.
+     * @param temperature - The temperature setting for the model.
      */
-    constructor(public azureCloud: string, public keyvaultName: string, public selectedInsideCodeblock?: boolean, public pasteOnClick?: boolean, public model?: string, public maxTokens?: number, public temperature?: number) {
-
-    }
+    constructor(
+        public azureCloud: string, 
+        public keyvaultName: string, 
+        public selectedInsideCodeblock: boolean = false, 
+        public pasteOnClick: boolean = false, 
+        public maxTokens: number = 0, 
+        public temperature: number = 0
+    ) {}
 };

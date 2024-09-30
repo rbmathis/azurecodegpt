@@ -1,12 +1,6 @@
-import {
-    OpenAIClient,
-    AzureKeyCredential,
-    ChatRequestMessage,
-    ChatRequestSystemMessage, 
-    ChatRequestUserMessage, 
-    ChatRequestAssistantMessage
-} from "@azure/openai";
+import { AzureOpenAI, AzureClientOptions } from "openai";
 import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
+import ChatCompletionsAPI from "openai";
 
 /**
  * A helper class for interacting with the Azure OpenAI service.
@@ -14,10 +8,8 @@ import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
  */
 export class AOAIHelper{
     private static instance: AOAIHelper;
-    private _openai?: OpenAIClient;
-
-
-
+    private _openai: AzureOpenAI;
+    
     /**
      * Constructs an instance of AOAIHelper.
      * 
@@ -32,178 +24,144 @@ export class AOAIHelper{
         }
         this.aoaiEndpointConfig = aoaiEndpointConfig;
         this.options = options;
+        const opts : AzureClientOptions = { 
+            deployment: this.aoaiEndpointConfig.aoaiDeployment, 
+            apiVersion: this.aoaiEndpointConfig.aoaiapiVersion, 
+            apiKey: this.aoaiEndpointConfig.aoaiKey,
+            endpoint: this.aoaiEndpointConfig.aoaiEndpoint
+        };
+        this._openai = new AzureOpenAI(opts);
     }
 
-
-
-
+    
+    
     /**
-     * Retrieves an instance of the `AOAIHelper` class. If an `aoaiEndpointConfig` is provided, 
-     * it creates a new instance and attempts to connect to AOAI. If the connection is successful, 
-     * the new instance is set as the singleton instance. If the connection fails, an error is thrown.
-     * If no `aoaiEndpointConfig` is provided, the existing singleton instance is returned.
-     * 
+     * Retrieves an instance of `AOAIHelper`. If `aoaiEndpointConfig` is provided, it attempts to create a new instance
+     * and connect to AOAI using the provided configuration. If the connection is successful, the instance is stored
+     * and returned. If the connection fails, an error is thrown. If `aoaiEndpointConfig` is not provided, it returns
+     * the existing instance if available, otherwise throws an error indicating that the instance is not initialized.
+     *
      * @param aoaiEndpointConfig - Optional configuration for the AOAI endpoint.
-     * @param options - Optional configuration options for the AOAI instance.
-     * @returns The singleton instance of the `AOAIHelper` class.
-     * @throws Will throw an error if the connection to AOAI fails.
+     * @param options - Optional settings for the AOAI instance.
+     * @returns A promise that resolves to an instance of `AOAIHelper`.
+     * @throws Will throw an error if the connection to AOAI fails or if the instance is not initialized when `aoaiEndpointConfig` is not provided.
      */
-    public static getInstance(aoaiEndpointConfig?: AOAIEndpointSecrets, options?:AOAIOptions): AOAIHelper {
+    public static async getInstance(aoaiEndpointConfig?: AOAIEndpointSecrets, options?: AOAIOptions): Promise<AOAIHelper> {
+        if (aoaiEndpointConfig) {
+            const tmp = new AOAIHelper(aoaiEndpointConfig, options || this.instance?.options || {});
 
-        if(aoaiEndpointConfig)//create a new instance
-        {
-            let tmp = new AOAIHelper(aoaiEndpointConfig, options ? options : this.instance.options);
-
-            tmp.connectAOAI().then((result) => {
-                if(result){
-                    this.instance = tmp;
-                }
-                else{
-                    throw new Error(`Could not connect to AOAI using endpoint:${this.instance.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.instance.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name.`);
-                }
-            });
-            this.instance = tmp;
+            const result = await tmp.connectAOAI();
+            if (result) {
+                this.instance = tmp;
+            } else {
+                throw new Error(`Could not connect to AOAI using endpoint:${aoaiEndpointConfig.aoaiEndpoint} and deployment:${aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name.`);
+            }
             return tmp;
-        }
-        else{        
-            if(options){
+        } else {
+            if (!this.instance) {
+                throw new Error("Instance not initialized. Please provide aoaiEndpointConfig to initialize.");
+            }
+            if (options) {
                 this.instance.options = options;
             }
             return this.instance;
-        }     
+        }
     }
 
 
 
     /**
-     * Connects to the Azure OpenAI service and performs a simple test to verify the connection.
+     * Connects to the Azure OpenAI Interface (AOAI) and performs a test chat to verify the connection.
      * 
-     * @returns {Promise<boolean | undefined>} A promise that resolves to `true` if the connection is successful, 
-     * or throws an error if the connection fails.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if the connection is successful.
      * 
-     * @throws {Error} Throws an error if the endpoint or options are null or undefined, or if the connection to AOAI fails.
-     * 
-     * @remarks
-     * This method initializes the OpenAIClient with the provided endpoint and key, and sends a test message to verify the connection.
-     * Ensure that the `aoaiEndpointConfig` and `options` are properly set before calling this method.
+     * @throws {Error} - Throws an error if the endpoint or options are null or undefined, or if the connection fails.
+     * The error message will include details about the endpoint and deployment configuration.
      */
-    private async connectAOAI() : Promise<boolean> {
-
-        if ((!this.aoaiEndpointConfig) || (!this.options)) {
-            throw new Error("EndPoint and Options cannot be null or undefined.");
+    private async connectAOAI(): Promise<boolean> {
+        if (!this.aoaiEndpointConfig || !this.options) {
+            throw new Error("Endpoint and Options cannot be null or undefined.");
         }
 
-        //connect to AOAI and run a simple test
-        //we should have all the settings and auth ready
-        try{
-            this._openai = new OpenAIClient(
-                this.aoaiEndpointConfig.aoaiEndpoint,
-                new AzureKeyCredential(this.aoaiEndpointConfig.aoaiKey)
-            );
-
-            await this._openai.getChatCompletions(this.aoaiEndpointConfig.aoaiDeployment, [
-                { role: "user", content: "Hello, are you there?" },
-            ]);
+        try {
+            const testMessage: ChatCompletionsAPI.ChatCompletionMessageParam = { role: "user", content: 'Say hello!' };
+            const result = await this.doChat([testMessage]);
+            console.log(`aiaogpt: [Success] Test chat successful: '${result}'`);
             return true;
-
         } catch (err) {
-            throw new Error(`Could not connect to AOAI using endpoint:${this.aoaiEndpointConfig.aoaiEndpoint} and deployment:${this.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name. Message: ${(err instanceof Error ? err.message : String(err))}`);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            throw new Error(`Could not connect to AOAI using endpoint: ${this.aoaiEndpointConfig.aoaiEndpoint} and deployment: ${this.aoaiEndpointConfig.aoaiDeployment}. Please verify KeyVault settings for API key, endpoint, and deployment name. Message: ${errorMessage}`);
         }
     }
 
 
+    
     /**
-     * Creates a code prompt for a chat request message.
+     * Creates a prompt for a chat completion API by constructing a series of messages
+     * including system, user, and assistant roles.
      *
-     * @param systemPrompt - The system prompt to be used in the chat request.
-     * @param question - The user's question to be included in the chat request.
-     * @param selection - Optional. The code selection to be included in the chat request.
-     * @param putSelectedInsideCodeBlock - Optional. If true, the code selection will be wrapped inside a code block.
-     * @returns An array of `ChatRequestMessage` objects representing the chat request.
+     * @param systemPrompt - The initial system message to set the context for the chat.
+     * @param question - The question or task to be included in the user message.
+     * @param selection - Optional. A code selection or additional context to include in the user message.
+     * @param putSelectedInsideCodeBlock - Optional. Defaults to false. If true, wraps the selection inside a code block.
+     * @returns An array of chat completion message parameters to be used with the chat completion API.
      */
-    public createCodePrompt(systemPrompt:string, question: string, selection?: string, putSelectedInsideCodeBlock?: boolean): ChatRequestMessage[] {
+    public createCodePrompt(systemPrompt: string, question: string, selection?: string, putSelectedInsideCodeBlock: boolean = false): ChatCompletionsAPI.Chat.Completions.ChatCompletionMessageParam[] {
+        const chatMessageBuffer: ChatCompletionsAPI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
-        const chatMessageBuffer: ChatRequestMessage[] = [];
-        
-        //stitch together the user question and the code selection if it exists
-        let userPrompt = "";
-        if (selection) {
-            if ( putSelectedInsideCodeBlock) {
-                userPrompt = `${question}\n\`\`\`\n${selection}\n\`\`\``;
-            } else {
-                userPrompt = `${question}\n${selection}\n`;
-            }
-        } else {
-            userPrompt = question;
-        }
+        // Construct the user prompt
+        const userPrompt = selection 
+            ? `${question}\n${putSelectedInsideCodeBlock ? `\`\`\`\n${selection}\n\`\`\`` : selection}`
+            : question;
 
-        // System message
-        let sys: ChatRequestSystemMessage = {
+        // Add system message
+        chatMessageBuffer.push({
             role: "system",
-            content: systemPrompt.trim() 
-        };
-        chatMessageBuffer.push(sys);
-    
-        // User message
-        let usr: ChatRequestUserMessage = {
+            content: systemPrompt.trim()
+        });
+
+        // Add user message
+        chatMessageBuffer.push({
             role: "user",
-            content: userPrompt.trim() 
-        };
-        chatMessageBuffer.push(usr);
-    
-        // Assistant's initial placeholder response
-        let ass: ChatRequestAssistantMessage = {
+            content: userPrompt.trim()
+        });
+
+        // Add assistant's initial placeholder response
+        chatMessageBuffer.push({
             role: "assistant",
-            content: "..." 
-        };
-        chatMessageBuffer.push(ass);
-    
+            content: "..."
+        });
+
         return chatMessageBuffer;
     }
 
 
     /**
-     * Sends a chat request to the Azure OpenAI endpoint and returns the response.
+     * Sends a chat prompt to the OpenAI API and returns the response.
      *
-     * @param {ChatRequestMessage[]} prompt - An array of chat request messages to be sent to the OpenAI endpoint.
-     * @returns {Promise<string | undefined>} - A promise that resolves to the response string from the OpenAI endpoint, or undefined if no response is received.
-     * @throws {Error} - Throws an error if the OpenAI client is not initialized or if there is an issue getting chat completions from the AOAI.
+     * @param prompt - An array of chat completion message parameters to send to the OpenAI API.
+     * @returns A promise that resolves to the response string from the OpenAI API.
+     * @throws Will throw an error if the OpenAI client is not initialized or if there is an issue with the API request.
      */
-    public async doChat(prompt: ChatRequestMessage[]):Promise<string | undefined>{
-
-        //stop if we don't have a chatclient ready
+    public async doChat(prompt: ChatCompletionsAPI.Chat.Completions.ChatCompletionMessageParam[]): Promise<string> {
         if (!this._openai) {
             throw new Error("OpenAI client is not initialized.");
         }
 
-        //populate the options from settings
-        const options = {
-            temperature: this.options.temperature,
-            maxTokens: this.options.maxTokens,
-            topP: 1.0,
-            frequencyPenalty: 1,
-            presencePenalty: 1,
-            stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"],
-        };
+        try {
+            const result = await this._openai.chat.completions.create({
+                model: this.aoaiEndpointConfig.aoaiDeployment,
+                messages: prompt,
+                max_tokens: this.options.maxTokens,
+                temperature: this.options.temperature,
+                stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"]
+            });
 
-
-        let response = "";
-        let completion;
-        try{
-            //send the prompts to the AOAI endpoint
-            completion = await this._openai.getChatCompletions(
-                this.aoaiEndpointConfig.aoaiDeployment,
-                prompt,
-                options
-            );
-        
-            //grab the response from AOAI
-            response = completion.choices[0].message?.content || "";
+            return result.choices[0].message?.content || "";
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            throw new Error(`Could not get chat completions from AOAI. Message: ${errorMessage}`);
         }
-        catch (err) {
-            throw new Error("Could not get chat completions from AOAI. Message: " + (err instanceof Error ? err.message : String(err)));   
-        }
-        return response;
     }
     
 }

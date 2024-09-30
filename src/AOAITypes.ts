@@ -28,12 +28,22 @@ export class AOAIEndpointSecrets {
     public aoaiDeployment: string;
 
     /**
-     * Initializes a new instance of the `AOAIEndpointSecrets` class with empty values.
+     * The apiVersion for the Azure OpenAI service.
+     */
+    public aoaiapiVersion: string;
+
+
+    /**
+     * Constructs a new instance of the class and initializes the properties
+     * `aoaiEndpoint`, `aoaiKey`, `aoaiDeployment`, and `apiVersion`.
+     * 
+     * @constructor
      */
     constructor()
     {
         this.aoaiEndpoint = "";
         this.aoaiKey = "";
         this.aoaiDeployment = "";
+        this.aoaiapiVersion = "2024-04-01-preview";
     }
 }
