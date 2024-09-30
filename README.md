@@ -23,12 +23,10 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 
 <br>
 
-# 📢 v1.0 Release
+# 📢 v2.0 Release
 
 -   Based on the original <a href="https://marketplace.visualstudio.com/items?itemName=jeremysemel.azurecodegpt">CodeGPT</a> v1.1.2
--   I have added the ability to use Azure KeyVault to lookup the necessary secrets so that organizations can adopt this without sharing connection secrets.
--   I have added code to ensure that if the extension is set to use AzureGovCloud, the endpoint from KeyVault is enfored to be ".us" rather than ".com"
--   This version is based on  "@azure/openai": "^1.0.0-beta.10", "openai": "^3.1.0", which has known vulnerabilities
+-   Updated to latest version of openai, added functionality to create unit tests
 
 &nbsp;
 
