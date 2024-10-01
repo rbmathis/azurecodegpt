@@ -4,7 +4,7 @@
 This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security/compliance restraints. 
 
 The only required settings for this version are:
-- `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' for GovCloud
+- `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' for GovCloud. The extension will use the appropriate [Azure Graph Endpoint](https://learn.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints) to load a credential for the current user.
 - `Keyvault Name`: The name of the [KeyVault](https://azure.microsoft.com/en-us/products/key-vault/) where the necessary configuration secrets will be stored.
 
 Required KeyVault Configuration:
