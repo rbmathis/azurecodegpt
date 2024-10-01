@@ -13,8 +13,10 @@ Required KeyVault Configuration:
 - `AOAIKey` : the API Key from the AOAI instance
 - `AOAIAPIVersion`: the version of the OpenAI API used to interact with the AOAI endpoint. Ex. "2024-04-01-preview"
 
-*** The current user must be able to login to Azure via [az cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli), and must have reader access to the configured Key Vault ***
+**The current user must be able to login to Azure via [az cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli), and must have reader access to the configured Key Vault**
 </p>
+
+---
 
 ### Imperatives:
 You must ensure that you are using the correct cloud for IL-classified work. The extension will not do this for you.  The extension does provide simple logic to ensure that if you set `AzureUSGovernment` in the `AzureCloud` setting, it will only try to connect to a KeyVault hosted in AzureGov, and also sanity-check the AOAIEndpoint value to ensure it is a GovCloud endpoint.
@@ -25,22 +27,15 @@ This Visual Studio Code extension uses the [official v4 OpenAI Client Library](h
 
 Supercharge your coding with AI-powered assistance! Automatically write new code from scratch, ask questions, get explanations, refactor code, find bugs and more 🚀✨ 
 
-
-### Links:
-
-- **[Github Repository](https://github.com/rbmathis/aoaigpt)**
-
-<br>
+---
 
 # 📢 v2.0 Release
-
+- **[Github Repository](https://github.com/rbmathis/aoaigpt)**
 -   Based on the original <a href="https://marketplace.visualstudio.com/items?itemName=jeremysemel.azurecodegpt">CodeGPT</a> v1.1.2
 -   Updated to latest version of openai, added functionality to create unit tests
-
-&nbsp;
-
-# 🌟 Preview
 <img src="examples/main.png" alt="Refactoring selected code using chatGPT"/>
+
+---
 
 ## Features
 - 💡 **Ask general questions** or use code snippets from the editor to query GPT3 via an input box in the sidebar
@@ -52,7 +47,7 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 - 💻 View GPT's responses in a panel next to the editor
 - 📝 **Insert code snippets** from the AI's response into the active editor by clicking on them
 
-
+---
 
 ## Installation
 
@@ -65,6 +60,8 @@ After completing these steps, the extension should be ready to use after a resta
 
 <img src="examples/settings.png" alt="User Settings"/>
 
+---
+
 ## KeyVault Configuration
 1. This extension expects the current user to login to Azure via `az login`. The extension then uses the cliCredential to connect to Key Vault. **The user must have at least 'Secrets User' access to Key Vault in order for the extension to load the necessary configuration values.
 2. The KeyVault must contain secrets for the following settings:
@@ -75,6 +72,7 @@ After completing these steps, the extension should be ready to use after a resta
 
 <img src="examples/keyvault.png" alt="Writing new code using chatGPT" width="500"/>
 
+---
 
 ## Using the Extension
 
