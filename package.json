@@ -151,7 +151,7 @@
                         "AzureUSGovernment",
                         "AzureDOD"
                     ],
-                    "description": "The Azure cloud to use for Authorization and KeyVault. Ex: 'AzureCloud' or 'AzureUSGovernment' or 'AzureDOD' ", 
+                    "description": "The Azure cloud to use for Authorization and KeyVault. Ex: 'AzureCloud' or 'AzureUSGovernment' or 'AzureDOD' ",
                     "order": 0
                 },
                 "aoaicodegpt.keyvaultName": {
@@ -248,6 +248,7 @@
     "dependencies": {
         "@azure/identity": "^4.4.1",
         "@azure/keyvault-secrets": "^4.8.0",
-        "openai": "^4.65.0"
+        "openai": "^4.63.0",
+        "tslib": "^2.7.0"
     }
 }
