@@ -1,18 +1,27 @@
 # aoaigpt: GPT3 and ChatGPT extension for VSCode
 
 <p align="center">
-This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security copmliance restraints. The configuration for this version requires you to set the Azure Graph endpoint Uri for authorization in commercial/govcloud/IL5, and a Uri to an Azure KeyVault in commercial or AzureGov that contains the necessary secrets:
+This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security copmliance restraints. 
 
+The only required settings for this version are:
+- `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' for GovCloud
+- `Keyvault Name`: The name of the [KeyVault](https://azure.microsoft.com/en-us/products/key-vault/) where the necessary configuration secrets will be stored.
+
+Required KeyVault Configuration:
 - `AOAIDeployment`: the name of the AOAI deployment. Ex. "gpt-35-turbo" or "gpt-4o"	
-- `AOAIEndpoint`: the Uri of AOAI instance. Ex. https://yourname.openai.azure.us/ or https://yourname.openai.azure.com/
+- `AOAIEndpoint`: the Uri of AOAI instance. Ex. "https://{yourname}.openai.azure.us/" or "https://{yourname}.openai.azure.com/"
 - `AOAIKey` : the API Key from the AOAI instance
-= `AOAIAPIVersion`: the version of the OpenAI API used to interact with the AOAI endpoint
+- `AOAIAPIVersion`: the version of the OpenAI API used to interact with the AOAI endpoint. Ex. "2024-04-01-preview"
+
+*** The current user must be able to login to Azure via [az cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli), and must have reader access to the configured Key Vault ***
 </p>
 
 ### Imperatives:
-You must ensure that you are using the correct cloud for IL-classified work. The extension will not do this for you.  It will simply use the secrets that have been set inside KeyVault, so make sure that 
+You must ensure that you are using the correct cloud for IL-classified work. The extension will not do this for you.  The extension does provide simple logic to ensure that if you set `AzureUSGovernment` in the `AzureCloud` setting, it will only try to connect to a KeyVault hosted in AzureGov, and also sanity-check the AOAIEndpoint value to ensure it is a GovCloud endpoint.
 
-This Visual Studio Code extension allows you to use the [official Azure OpenAI Client Library](https://learn.microsoft.com/en-us/javascript/api/overview/azure/openai-readme?view=azure-node-preview) to generate code or natural language responses to your questions from any GPT model hosted by Azure OpenAI.
+This Visual Studio Code extension uses the [official v4 OpenAI Client Library](https://www.npmjs.com/package/openai) and the [Azure Open API migration guide](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/migration-javascript?tabs=javascript-new) to generate code or natural language responses to your questions from any GPT model hosted by Azure OpenAI.
+
+`npm audit` shows 0 vulnerabilies as of 2024-10-01
 
 Supercharge your coding with AI-powered assistance! Automatically write new code from scratch, ask questions, get explanations, refactor code, find bugs and more 🚀✨ 
 
@@ -48,21 +57,22 @@ Supercharge your coding with AI-powered assistance! Automatically write new code
 ## Installation
 
 1. clone this repo
-2. `npm install vsce`
-3. From the cloned directory: `vsce package`
-4. Drag/drop the .vsix file from the folder onto VSCode Extensions
+2. Install vsce: `npm install vsce`
+3. From the cloned directory run: `vsce package`
+4. Drag/drop the .vsix file from the folder into your VSCode Extensions window
 
 After completing these steps, the extension should be ready to use after a restart.
 
 <img src="examples/settings.png" alt="User Settings"/>
 
 ## KeyVault Configuration
-
-The KeyVault must contain secrets for the following settings:
+1. This extension expects the current user to login to Azure via `az login`. The extension then uses the cliCredential to connect to Key Vault. **The user must have at least 'Secrets User' access to Key Vault in order for the extension to load the necessary configuration values.
+2. The KeyVault must contain secrets for the following settings:
  - AOAIAPIVersion : required by the latest openai SDK.
  - AOAIDeployment: the name of the deployment within Azure Open AI
  - AOAIEndpoint: the Uri to the endpoint hosted by Azure Open AI
  - AOAIKey: a valid key to use to connect to the Azure Open AI endpoint
+
 <img src="examples/keyvault.png" alt="Writing new code using chatGPT" width="500"/>
 
 
@@ -79,13 +89,13 @@ You can also select a code snippet in the editor and then enter a prompt in the 
 
 <img src="examples/explain.png" alt="Refactoring selected code using chatGPT"/>
 
-To **insert a code snippet** from the AI's response into the editor, simply click on the code block in the panel. The code will be automatically inserted at the cursor position in the active editor.
+To **insert a code snippet** from the AI's response into the editor, simply click on the code block in the panel. The code will be automatically inserted at the cursor position in the active editor. This functionality is controlled by the setting `pasteOnClick` setting.  If true, clicks within the results window will be pasted into the open document.
 
 <img src="examples/refactor.png" alt="chatGPT explaining selected code"/>
 
 You can select some code in the editor, right click on it and choose one of the following **shortcuts** from the context menu:
 #### Commands:
-- `Ask aoaigpt`: will provide a prompt for you to enter any query
+- `Ask aoaigpt`: will provide a prompt for you to enter any prompt
 - `aoaigpt: Explain selection`: will explain what the selected code does
 - `aoaigpt: Refactor and Optimize selection`: will try to refactor and optimize the selected code
 - `aoaigpt: Find problems`: looks for problems/errors in the selected code, fixes and explains them

@@ -156,7 +156,7 @@
                 "aoaicodegpt.keyvaultName": {
                     "type": "string",
                     "default": "",
-                    "description": "The name (not Uri) of the Azure KeyVault that contains the secrets for [AOAIDeployment], [AOAIKey], [AOAIEndpoint]",
+                    "description": "The name (not Uri) of the Azure KeyVault that contains the secrets for [AOAIDeployment], [AOAIKey], [AOAIEndpoint], [AOAIAPIVersion]",
                     "order": 1
                 },
                 "aoaicodegpt.maxTokens": {
