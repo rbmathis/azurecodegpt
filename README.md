@@ -1,7 +1,7 @@
 # aoaigpt: GPT3 and ChatGPT extension for VSCode
 
-<p align="center">
-This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security copmliance restraints. 
+<p>
+This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security/compliance restraints. 
 
 The only required settings for this version are:
 - `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' for GovCloud
