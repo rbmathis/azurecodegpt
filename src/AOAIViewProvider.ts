@@ -100,11 +100,11 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
      * @returns {Promise<void>} A promise that resolves when the connection is successful.
      * 
      * @throws Will show an error message if the connection to AOAI fails or if the endpoint
-     *         is not configured correctly for AzureUSGovernment.
+     *         is not configured correctly for AzureUSGovernment or AzureDoD.
      * 
      * @remarks
      * - Loads secrets for AOAI deployment, endpoint, and key from Azure Key Vault.
-     * - Ensures the AOAI endpoint is configured for government cloud if the setting is set to AzureUSGovernment.
+     * - Ensures the AOAI endpoint is configured for government cloud if the setting is set to AzureUSGovernment or AzureDoD.
      * - Initializes the AOAI helper with the loaded secrets and settings.
      * - Displays a success message upon successful connection, or an error message if the connection fails.
      */
@@ -115,8 +115,8 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
             const secrets = await this.loadAOAISecrets();
 
             // Ensure AOAI endpoint is for govcloud if the setting is set
-            if (this._settings.azureCloud === "AzureUSGovernment" && !secrets.aoaiEndpoint.endsWith(".us/") && !secrets.aoaiEndpoint.endsWith(".us")) {
-                vscode.window.showErrorMessage("aoaicodegpt: [Error] - The setting for [AzureCloud] is set for AzureUSGovernment, but the AOAI endpoint loaded from KeyVault doesn't appear to be a GovCloud endpoint. Please check the secrets in KeyVault to ensure the value for [AOAIEndpoint] is configured for a govCloud AOAI endpoint.");
+            if (((this._settings.azureCloud === "AzureUSGovernment") || (this._settings.azureCloud === "AzureDoD")) && !secrets.aoaiEndpoint.endsWith(".us/") && !secrets.aoaiEndpoint.endsWith(".us")) {
+                vscode.window.showErrorMessage("aoaicodegpt: [Error] - The setting for [AzureCloud] is set for AzureUSGovernment or AzureDoD, but the AOAI endpoint loaded from KeyVault doesn't appear to be a GovCloud endpoint. Please check the secrets in KeyVault to ensure the value for [AOAIEndpoint] is configured for a govCloud AOAI endpoint.");
                 return;
             }
 

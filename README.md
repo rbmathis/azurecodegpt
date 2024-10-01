@@ -4,7 +4,7 @@
 This project is a large rewrite of  <a href="https://github.com/ThePush/azurecodegpt">AzureCodeGPT</a> that uses Azure OpenAI hosted in Azure commercial or GovCloud *without* requiring an API key. The extension provides an AI coding assistant to developers in Gov/DoD that cannot use GitHub Copilot due to security/compliance restraints. 
 
 The only required settings for this version are:
-- `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' for GovCloud. The extension will use the appropriate [Azure Graph Endpoint](https://learn.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints) to load a credential for the current user.
+- `Azure cloud`: 'AzureCloud' for commercial, 'AzureUSGovernment' or 'AzureDoD' for GovCloud. The extension will use the appropriate [Azure Graph Endpoint](https://learn.microsoft.com/en-us/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints) to load a credential for the current user.
 - `Keyvault Name`: The name of the [KeyVault](https://azure.microsoft.com/en-us/products/key-vault/) where the necessary configuration secrets will be stored.
 
 Required KeyVault Configuration:
@@ -19,7 +19,7 @@ Required KeyVault Configuration:
 ---
 
 ### Imperatives:
-You must ensure that you are using the correct cloud for IL-classified work. The extension will not do this for you.  The extension does provide simple logic to ensure that if you set `AzureUSGovernment` in the `AzureCloud` setting, it will only try to connect to a KeyVault hosted in AzureGov, and also sanity-check the AOAIEndpoint value to ensure it is a GovCloud endpoint.
+You must ensure that you are using the correct cloud for IL-classified work. The extension will not do this for you.  The extension does provide simple logic to ensure that if you set `AzureUSGovernment` or `AzureDoD` in the `AzureCloud` setting, it will only try to connect to a KeyVault hosted in AzureGov, and also sanity-check the AOAIEndpoint value to ensure it is a GovCloud endpoint.
 
 This Visual Studio Code extension uses the [official v4 OpenAI Client Library](https://www.npmjs.com/package/openai) and the [Azure Open API migration guide](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/migration-javascript?tabs=javascript-new) to generate code or natural language responses to your questions from any GPT model hosted by Azure OpenAI.
 

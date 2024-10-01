@@ -12,12 +12,14 @@ export class ExtensionSettings  {
      * @remarks
      * - If `azureCloud` is "AzureCloud", it returns the URI for the public Azure cloud.
      * - If `azureCloud` is "AzureUSGovernment", it returns the URI for the US Government Azure cloud.
+     * - If `azureCloud` is "AzureDOD", it returns the URI for the Department of Defense Azure cloud.
      * - If `azureCloud` has any other value, it returns an error message indicating an invalid Azure Cloud setting.
      */
     public get graphUri(): string {
         const uriMap: { [key: string]: string } = {
             "AzureCloud": "https://graph.microsoft.com/.default",
-            "AzureUSGovernment": "https://graph.microsoft.us/.default"
+            "AzureUSGovernment": "https://graph.microsoft.us/.default",
+            "AzureDOD": "https://dod-graph.microsoft.us",
         };
 
         return uriMap[this.azureCloud] || "[Error]: Invalid Azure Cloud setting";
@@ -31,13 +33,14 @@ export class ExtensionSettings  {
      *
      * The URI is constructed as follows:
      * - For `AzureCloud`, the URI is `https://<keyvaultName>.vault.azure.net`
-     * - For `AzureUSGovernment`, the URI is `https://<keyvaultName>.vault.usgovcloudapi.net`
+     * - For `AzureUSGovernment` or `AzureDoD`, the URI is `https://<keyvaultName>.vault.usgovcloudapi.net`
      * - For any other value of `azureCloud`, an error message is returned.
      */
     public get vaultUri(): string {
         const uriMap: { [key: string]: string } = {
             "AzureCloud": `https://${this.keyvaultName}.vault.azure.net`,
-            "AzureUSGovernment": `https://${this.keyvaultName}.vault.usgovcloudapi.net`
+            "AzureUSGovernment": `https://${this.keyvaultName}.vault.usgovcloudapi.net`,
+            "AzureDoD": `https://${this.keyvaultName}.vault.usgovcloudapi.net`
         };
 
         return uriMap[this.azureCloud] || "[Error]: Invalid Azure Cloud setting";
