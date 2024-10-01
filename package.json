@@ -249,6 +249,7 @@
         "@azure/identity": "^4.4.1",
         "@azure/keyvault-secrets": "^4.8.0",
         "openai": "^4.63.0",
-        "tslib": "^2.7.0"
+        "tslib": "^2.7.0",
+        "yarn": "^1.22.22"
     }
 }
