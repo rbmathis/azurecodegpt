@@ -148,10 +148,9 @@
                     "default": "AzureCloud",
                     "enum": [
                         "AzureCloud",
-                        "AzureUSGovernment",
-                        "AzureDOD"
+                        "AzureUSGovernment"
                     ],
-                    "description": "The Azure cloud to use for Authorization and KeyVault. Ex: 'AzureCloud' or 'AzureUSGovernment' or 'AzureDOD' ",
+                    "description": "The Azure cloud to use for Authorization and KeyVault. Ex: 'AzureCloud' or 'AzureUSGovernment'",
                     "order": 0
                 },
                 "aoaicodegpt.keyvaultName": {
