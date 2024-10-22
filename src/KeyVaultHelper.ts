@@ -45,7 +45,7 @@ export class KeyVaultHelper {
       }
       KeyVaultHelper.instance = new KeyVaultHelper(cliCredential, vaultUri);
     } else if (cliCredential || vaultUri) {
-      KeyVaultHelper.instance = new KeyVaultHelper(cliCredential || KeyVaultHelper.instance.cliCredential, vaultUri || KeyVaultHelper.instance.vaultUri);
+      KeyVaultHelper.instance = new KeyVaultHelper(cliCredential || KeyVaultHelper.instance.cliCredential, vaultUri ?? KeyVaultHelper.instance.vaultUri);
     }
     return KeyVaultHelper.instance;
   }

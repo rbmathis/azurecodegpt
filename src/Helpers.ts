@@ -9,7 +9,7 @@
 export function ensureCodeBlocks(chatResult: string): string {
   // close unclosed codeblocks
   // Use a regular expression to find all occurrences of the substring in the string
-  const REGEX_CODEBLOCK = new RegExp("```", "g");
+  const REGEX_CODEBLOCK = /```/g;
   const matches = chatResult.match(REGEX_CODEBLOCK);
   // Return the number of occurrences of the substring in the response, check if even
   const count = matches ? matches.length : 0;

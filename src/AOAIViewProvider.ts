@@ -18,7 +18,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "aoaicodegpt.chatView";
   private _view?: vscode.WebviewView;
   private _prompt?: string;
-  private credential = new AzureCliCredential();
+  private readonly credential = new AzureCliCredential();
   private _settings: ExtensionSettings;
   private _kvHelper?: KeyVaultHelper;
   private _aoaiHelper?: AOAIHelper;
@@ -38,10 +38,9 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
 
     //ensure settings are configured
     this._settings = settings;
-    if (!settings || !settings.azureCloud || !settings.keyvaultName) {
+    if (!settings?.azureCloud || !settings?.keyvaultName) {
       vscode.window.showErrorMessage("aoaicodegpt: [Error] - Settings must be configured for [azureCloud] and [keyvaultName].");
       this.displayResponseInView(`\n\n---\naoaicodegpt: [Error] - Settings must be configured for [azureCloud] and [keyvaultName].`);
-      return;
     }
   }
 
@@ -62,8 +61,20 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
       // Apply the settings
       this._settings = settings;
 
+      //show the "connecting" prompt in the webview
+      this._view?.webview.postMessage({
+        type: "setPrompt",
+        value: "Establishing connection to AOAI. Please wait...",
+      });
+
       // Attempt to connect to Azure AOAI
       await this.connectToAzureAOAI();
+
+      //show the "connecting" prompt in the webview
+      this._view?.webview.postMessage({
+        type: "setPrompt",
+        value: "",
+      });
     } catch (error) {
       // Handle any errors that occur during the process
       this.handleError(error);
@@ -161,7 +172,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
    * This method sets the options for the webview view, including enabling scripts and setting the local resource roots.
    * It also sets the HTML content for the webview view and adds an event listener for messages received by the webview.
    */
-  public resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
+  public resolveWebviewView(webviewView: vscode.WebviewView, _context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
     this._view = webviewView;
 
     // Set options for the webview, allow scripts
@@ -236,6 +247,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
     this._prompt = prompt;
 
     if (!this._aoaiHelper) {
+      this.connectToAzureAOAI();
       vscode.window.showErrorMessage("aoaicodegpt: [Error] - Azure OpenAI API not connected. Please check your settings.");
       return;
     }
@@ -250,10 +262,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
 
     try {
       const response = await this.getChatResponse(searchPrompt);
-      //add the token count to the response
-      let response2 = "Total Tokens: " + this._aoaiHelper.tokenCount + "<br><br>" + response;
-
-      this.displayResponseInView(response2);
+      this.displayResponseInView(response);
     } catch (error: any) {
       this.handleError(error);
     }
@@ -332,6 +341,10 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
       type: "addResponse",
       value: response,
     });
+    this._view?.webview.postMessage({
+      type: "setTokenCount",
+      value: this._aoaiHelper!.tokenCount,
+    });
   }
 
   /**
@@ -394,7 +407,7 @@ export class AOAIViewProvider implements vscode.WebviewViewProvider {
                 <input class="h-10 w-full text-white bg-stone-700 p-4 text-sm" placeholder="ex: Refactor and optimize this code and explain the changes." id="prompt-input" />
                 <div id="response" class="pt-4 text-sm">
                 </div>
-    
+                <div style="display:flex;align-items: flex-end;"> Total Tokens This Session: <span id="token-count" class="text-sm"></span>
                 <script src="${scriptUri}"></script>
             </body>
             </html>`;

@@ -31,12 +31,12 @@ export function activate(context: vscode.ExtensionContext) {
   const provider = new AOAIViewProvider(
     context.extensionUri,
     new ExtensionSettings(
-      config.get("azureCloud") || "AzureCloud",
-      config.get("keyvaultName") || "",
-      config.get("selectedInsideCodeblock") || false,
-      config.get("pasteOnClick") || false,
-      config.get<number>("maxTokens") || 500,
-      config.get<number>("temperature") || 0.5
+      config.get("azureCloud") ?? "AzureCloud",
+      config.get("keyvaultName") ?? "",
+      config.get("selectedInsideCodeblock") ?? false,
+      config.get("pasteOnClick") ?? false,
+      config.get<number>("maxTokens") ?? 500,
+      config.get<number>("temperature") ?? 0.5
     )
   );
 
@@ -74,22 +74,18 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   // Change the extension's settings when configuration is changed
-  vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
-    let shouldRefreshAPI = false;
+  vscode.workspace.onDidChangeConfiguration(() => {
     const config = vscode.workspace.getConfiguration("aoaicodegpt");
 
     provider.setSettings(
       new ExtensionSettings(
-        config.get("azureCloud") || "AzureCloud",
-        config.get("keyvaultName") || "",
-        config.get("selectedInsideCodeblock") || false,
-        config.get("pasteOnClick") || false,
-        config.get<number>("maxTokens") || 500,
-        config.get<number>("temperature") || 0.5
+        config.get("azureCloud") ?? "AzureCloud",
+        config.get("keyvaultName") ?? "",
+        config.get("selectedInsideCodeblock") ?? false,
+        config.get("pasteOnClick") ?? false,
+        config.get<number>("maxTokens") ?? 500,
+        config.get<number>("temperature") ?? 0.5
       )
     );
   });
 }
-
-// This method is called when your extension is deactivated
-export function deactivate() {}

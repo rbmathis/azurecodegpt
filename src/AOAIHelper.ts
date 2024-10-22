@@ -1,6 +1,5 @@
-import { AzureOpenAI, AzureClientOptions } from "openai";
+import ChatCompletionsAPI, { AzureOpenAI, AzureClientOptions } from "openai";
 import { AOAIEndpointSecrets, AOAIOptions } from "./AOAITypes";
-import ChatCompletionsAPI from "openai";
 
 /**
  * A helper class for interacting with the Azure OpenAI service.
@@ -8,7 +7,7 @@ import ChatCompletionsAPI from "openai";
  */
 export class AOAIHelper {
   private static instance: AOAIHelper;
-  private _openai: AzureOpenAI;
+  private readonly _openai: AzureOpenAI;
   private _tokenCount: number = 0;
 
   public get tokenCount(): number {
@@ -113,7 +112,11 @@ export class AOAIHelper {
     const chatMessageBuffer: ChatCompletionsAPI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
     // Construct the user prompt
-    const userPrompt = selection ? `${question}\n${putSelectedInsideCodeBlock ? `\`\`\`\n${selection}\n\`\`\`` : selection}` : question;
+    let formattedSelection = selection;
+    if (selection && putSelectedInsideCodeBlock) {
+      formattedSelection = `\`\`\`\n${selection}\n\`\`\``;
+    }
+    const userPrompt = selection ? `${question}\n${formattedSelection}` : question;
 
     // Add system message
     chatMessageBuffer.push({
@@ -153,14 +156,13 @@ export class AOAIHelper {
         model: this.aoaiEndpointConfig.aoaiDeployment,
         messages: prompt,
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        max_tokens: this.options.maxTokens,
-        temperature: this.options.temperature,
+        max_tokens: this.options.maxTokens ?? null,
+        temperature: this.options.temperature ?? null,
         stop: ["\nUSER: ", "\nUSER", "\nASSISTANT"],
       });
 
-      console.log(result.usage?.total_tokens);
       this._tokenCount += result.usage?.total_tokens!;
-      return result.choices[0].message?.content || "";
+      return result.choices[0].message?.content ?? "";
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       throw new Error(`Could not get chat completions from AOAI. Message: ${errorMessage}`);
